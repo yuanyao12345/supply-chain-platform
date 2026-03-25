@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企业注册 - 花湖国际机场供应链金融平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            min-height: 100vh;
+        }
+        .window-controls {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+        .window-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+        }
+        .window-btn.close {
+            background-color: #ff5f56;
+        }
+        .window-btn.minimize {
+            background-color: #ffbd2e;
+        }
+        .window-btn.maximize {
+            background-color: #27ca3f;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+        .nav {
+            display: flex;
+            gap: 20px;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        .nav a:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .form-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        .form-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #1e3c72, #2a5298, #1e3c72);
+        }
+        .form-card h1 {
+            font-size: 28px;
+            margin-bottom: 30px;
+            color: #1e3c72;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"],
+        input[type="email"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(42, 82, 152, 0.3);
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #dc3545;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #2a5298;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .back-link:hover {
+            color: #1e3c72;
+            text-decoration: underline;
+        }
+        .footer {
+            background: #1e3c72;
+            color: white;
+            padding: 30px 0;
+            margin-top: 40px;
+        }
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            text-align: center;
+        }
+        .footer p {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="window-controls">
+        <button class="window-btn close"></button>
+        <button class="window-btn minimize"></button>
+        <button class="window-btn maximize"></button>
+    </div>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=airport%20supply%20chain%20finance%20logo%20blue%20professional&image_size=square" alt="Logo">
+                花湖国际机场供应链金融平台
+            </div>
+            <nav class="nav">
+                <a href="{{ url_for('index') }}">首页</a>
+                <a href="{{ url_for('register_company') }}">企业注册</a>
+                <a href="{{ url_for('register_bank') }}">银行注册</a>
+                <a href="{{ url_for('loan_application') }}">融资申请</a>
+                <a href="{{ url_for('admin_login') }}">后台管理</a>
+                <a href="{{ url_for('bank_login') }}">融资审批</a>
+            </nav>
+        </div>
+    </header>
+    <div class="container">
+        <div class="form-card">
+            <h1>企业注册</h1>
+            {% if request.args.get('error') %}
+            <div class="error">
+                {{ request.args.get('error') }}
+            </div>
+            {% endif %}
+            <form method="POST">
+                <div class="form-group">
+                    <label for="name">企业名称</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="contact_person">联系人</label>
+                    <input type="text" id="contact_person" name="contact_person" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">联系电话</label>
+                    <input type="text" id="phone" name="phone" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">电子邮箱</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="address">企业地址</label>
+                    <textarea id="address" name="address" required></textarea>
+                </div>
+                <button type="submit" class="btn">提交注册</button>
+            </form>
+            <a href="{{ url_for('index') }}" class="back-link">返回首页</a>
+        </div>
+    </div>
+    <footer class="footer">
+        <div class="footer-content">
+            <p>© 2026 花湖国际机场供应链金融平台 版权所有</p>
+            <p>地址：湖北省鄂州市花湖国际机场</p>
+            <p>联系电话：027-12345678</p>
+        </div>
+    </footer>
+</body>
+</html>

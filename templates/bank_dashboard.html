@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>融资审批仪表盘 - 花湖国际机场供应链金融平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            min-height: 100vh;
+        }
+        .window-controls {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+        .window-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+        }
+        .window-btn.close {
+            background-color: #ff5f56;
+        }
+        .window-btn.minimize {
+            background-color: #ffbd2e;
+        }
+        .window-btn.maximize {
+            background-color: #27ca3f;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+        .nav {
+            display: flex;
+            gap: 20px;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        .nav a:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .dashboard-header h1 {
+            font-size: 28px;
+            color: #1e3c72;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(42, 82, 152, 0.3);
+        }
+        .bank-info {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .bank-info h3 {
+            margin-top: 0;
+            color: #1976d2;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        .bank-info p {
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #1e3c72, #2a5298, #1e3c72);
+        }
+        .section h2 {
+            color: #1e3c72;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section h2::before {
+            content: '💸';
+            font-size: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #1e3c72;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .status-pending {
+            color: #ffc107;
+            font-weight: bold;
+        }
+        .status-approved {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .status-rejected {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .update-btn {
+            padding: 8px 12px;
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+        }
+        .update-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+        .footer {
+            background: #1e3c72;
+            color: white;
+            padding: 30px 0;
+            margin-top: 40px;
+        }
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            text-align: center;
+        }
+        .footer p {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="window-controls">
+        <button class="window-btn close"></button>
+        <button class="window-btn minimize"></button>
+        <button class="window-btn maximize"></button>
+    </div>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=airport%20supply%20chain%20finance%20logo%20blue%20professional&image_size=square" alt="Logo">
+                花湖国际机场供应链金融平台
+            </div>
+            <nav class="nav">
+                <a href="{{ url_for('index') }}">首页</a>
+                <a href="{{ url_for('register_company') }}">企业注册</a>
+                <a href="{{ url_for('register_bank') }}">银行注册</a>
+                <a href="{{ url_for('loan_application') }}">融资申请</a>
+                <a href="{{ url_for('admin_login') }}">后台管理</a>
+                <a href="{{ url_for('bank_login') }}">融资审批</a>
+            </nav>
+        </div>
+    </header>
+    <div class="container">
+        <div class="dashboard-header">
+            <h1>融资审批仪表盘</h1>
+            <a href="{{ url_for('bank_logout') }}" class="btn">退出登录</a>
+        </div>
+        
+        <!-- 银行信息 -->
+        <div class="bank-info">
+            <h3>当前银行：{{ bank.name }}</h3>
+            <p>联系人：{{ bank.contact_person }}</p>
+            <p>联系电话：{{ bank.phone }}</p>
+            <p>电子邮箱：{{ bank.email }}</p>
+        </div>
+        
+        <!-- 融资申请 -->
+        <div class="section">
+            <h2>融资申请管理</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>企业名称</th>
+                        <th>融资金额</th>
+                        <th>融资用途</th>
+                        <th>申请日期</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for application in applications %}
+                    <tr>
+                        <td>{{ application.id }}</td>
+                        <td>{{ application.company.name }}</td>
+                        <td>{{ application.amount }} 元</td>
+                        <td>{{ application.purpose }}</td>
+                        <td>{{ application.application_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td class="status-{{ application.status.lower() }}">{{ application.status }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('bank_update_status', application_id=application.id) }}">
+                                <select name="status">
+                                    <option value="Pending" {% if application.status == 'Pending' %}selected{% endif %}>待处理</option>
+                                    <option value="Approved" {% if application.status == 'Approved' %}selected{% endif %}>已批准</option>
+                                    <option value="Rejected" {% if application.status == 'Rejected' %}selected{% endif %}>已拒绝</option>
+                                </select>
+                                <button type="submit" class="update-btn">更新</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <footer class="footer">
+        <div class="footer-content">
+            <p>© 2026 花湖国际机场供应链金融平台 版权所有</p>
+            <p>地址：湖北省鄂州市花湖国际机场</p>
+            <p>联系电话：027-12345678</p>
+        </div>
+    </footer>
+</body>
+</html>
