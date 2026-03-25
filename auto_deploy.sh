@@ -67,11 +67,11 @@ fi
 # 步骤6：创建管理员账户
 echo ""
 echo "[6/7] 创建管理员账户..."
-python -c "from app import app, db, Admin; app.app_context().push(); admin = Admin(username='admin', password='admin123'); db.session.add(admin); db.session.commit(); print('Admin account created!')"
+python -c "from app import app, db, Admin; app.app_context().push(); admin = Admin.query.filter_by(username='admin').first(); if not admin: admin = Admin(username='admin', password='admin123'); db.session.add(admin); db.session.commit(); print('Admin account created!'); else: print('Admin account already exists, skipping...')"
 if [ $? -eq 0 ]; then
-    echo "✓ 管理员账户创建成功"
+    echo "✓ 管理员账户处理成功"
 else
-    echo "✗ 管理员账户创建失败"
+    echo "✗ 管理员账户处理失败"
     exit 1
 fi
 

@@ -233,8 +233,8 @@ pip install -r requirements.txt
 # 5. 创建数据库
 python -c "from app import app, db; app.app_context().push(); db.create_all(); print('Database created!')"
 
-# 6. 创建管理员账户
-python -c "from app import app, db, Admin; app.app_context().push(); admin = Admin(username='admin', password='admin123'); db.session.add(admin); db.session.commit(); print('Admin account created!')"
+# 6. 创建管理员账户（如果不存在）
+python -c "from app import app, db, Admin; app.app_context().push(); admin = Admin.query.filter_by(username='admin').first(); if not admin: admin = Admin(username='admin', password='admin123'); db.session.add(admin); db.session.commit(); print('Admin account created!'); else: print('Admin account already exists, skipping...')"
 
 # 7. 完成
 echo "部署完成！现在去Web配置页面设置WSGI文件"
