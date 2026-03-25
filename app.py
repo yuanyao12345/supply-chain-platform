@@ -61,6 +61,11 @@ with app.app_context():
 def index():
     return render_template('index.html')
 
+# 关于我们
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
 # 企业注册
 @app.route('/register/company', methods=['GET', 'POST'])
 def register_company():
