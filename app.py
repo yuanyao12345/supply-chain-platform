@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
@@ -50,6 +50,15 @@ class Admin(db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
 
+class News(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.String(500), nullable=False)
+    image_prompt = db.Column(db.String(200), nullable=False)
+    link = db.Column(db.String(200), nullable=False)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+    group_id = db.Column(db.Integer, default=1)
+
 # 创建数据库
 with app.app_context():
     db.create_all()
@@ -57,6 +66,74 @@ with app.app_context():
     if not Admin.query.filter_by(username='admin').first():
         admin = Admin(username='admin', password='admin123')
         db.session.add(admin)
+        db.session.commit()
+    
+    # 初始化新闻数据
+    if not News.query.first():
+        news_data = [
+            # 第一组新闻
+            News(title='供应链金融创新模式助力航空物流发展', 
+                 content='通过金融科技手段，为航空物流企业提供更加灵活的融资解决方案。',
+                 image_prompt='supply%20chain%20finance%20news%20professional',
+                 link='https://finance.sina.com.cn/',
+                 date=datetime(2026, 3, 20),
+                 group_id=1),
+            News(title='多家银行加入机场供应链金融生态',
+                 content='包括工商银行、建设银行等多家银行已正式接入平台，为企业提供多元化融资渠道。',
+                 image_prompt='bank%20partnership%20finance%20news',
+                 link='https://finance.baidu.com/',
+                 date=datetime(2026, 3, 15),
+                 group_id=1),
+            News(title='花湖国际机场供应链金融平台正式上线',
+                 content='平台将为机场供应链企业提供更加便捷的融资服务，支持企业发展。',
+                 image_prompt='platform%20launch%20supply%20chain%20finance',
+                 link='https://finance.qq.com/',
+                 date=datetime(2026, 3, 10),
+                 group_id=1),
+            
+            # 第二组新闻
+            News(title='航空燃油供应商数字化融资解决方案',
+                 content='采用区块链技术实现供应链金融的透明化管理，降低融资风险。',
+                 image_prompt='aviation%20fuel%20supply%20chain%20digital%20finance',
+                 link='https://finance.sina.com.cn/',
+                 date=datetime(2026, 3, 25),
+                 group_id=2),
+            News(title='智能风控系统提升融资审批效率',
+                 content='引入人工智能风控系统，将融资审批时间从传统的15天缩短至3天。',
+                 image_prompt='ai%20risk%20control%20supply%20chain%20finance',
+                 link='https://finance.baidu.com/',
+                 date=datetime(2026, 3, 22),
+                 group_id=2),
+            News(title='跨境电商供应链金融服务创新',
+                 content='为跨境电商企业提供一站式融资解决方案，支持企业国际化发展。',
+                 image_prompt='cross%20border%20ecommerce%20supply%20chain%20finance',
+                 link='https://finance.qq.com/',
+                 date=datetime(2026, 3, 18),
+                 group_id=2),
+            
+            # 第三组新闻
+            News(title='绿色供应链金融助力可持续发展',
+                 content='推出绿色金融产品，支持环保型供应链企业的融资需求。',
+                 image_prompt='green%20supply%20chain%20finance%20sustainable',
+                 link='https://finance.sina.com.cn/',
+                 date=datetime(2026, 3, 28),
+                 group_id=3),
+            News(title='供应链金融数据共享平台建设',
+                 content='建立企业信用数据共享机制，提高融资效率和安全性。',
+                 image_prompt='data%20sharing%20platform%20supply%20chain%20finance',
+                 link='https://finance.baidu.com/',
+                 date=datetime(2026, 3, 26),
+                 group_id=3),
+            News(title='供应链资产证券化产品创新',
+                 content='推出供应链资产证券化产品，为投资者提供多元化投资渠道。',
+                 image_prompt='asset%20securitization%20supply%20chain%20finance',
+                 link='https://finance.qq.com/',
+                 date=datetime(2026, 3, 24),
+                 group_id=3),
+        ]
+        
+        for news in news_data:
+            db.session.add(news)
         db.session.commit()
 
 # 首页
@@ -229,6 +306,22 @@ def bank_logout():
 def admin_logout():
     session.pop('admin_id', None)
     return redirect(url_for('index'))
+
+# 获取新闻API
+@app.route('/api/news/<int:group_id>')
+def get_news(group_id):
+    news = News.query.filter_by(group_id=group_id).order_by(News.date.desc()).all()
+    news_list = []
+    for item in news:
+        news_list.append({
+            'id': item.id,
+            'title': item.title,
+            'content': item.content,
+            'image_prompt': item.image_prompt,
+            'link': item.link,
+            'date': item.date.strftime('%Y-%m-%d')
+        })
+    return jsonify(news_list)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5002))
