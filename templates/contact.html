@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>联系我们 - 花湖国际机场供应链金融平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            min-height: 100vh;
+        }
+        .window-controls {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+        .window-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+        }
+        .window-btn.close {
+            background-color: #ff5f56;
+        }
+        .window-btn.minimize {
+            background-color: #ffbd2e;
+        }
+        .window-btn.maximize {
+            background-color: #27ca3f;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .nav {
+            display: flex;
+            gap: 20px;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        .nav a:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .contact-section {
+            background: white;
+            border-radius: 8px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .contact-section h2 {
+            color: #1e3c72;
+            margin-bottom: 20px;
+            font-size: 28px;
+            border-bottom: 3px solid #2a5298;
+            padding-bottom: 10px;
+        }
+        .contact-section p {
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .contact-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        .contact-card {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 8px;
+            border-left: 4px solid #2a5298;
+        }
+        .contact-card h3 {
+            color: #1e3c72;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        .contact-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            gap: 15px;
+        }
+        .contact-item i {
+            color: #2a5298;
+            font-size: 20px;
+            margin-top: 2px;
+        }
+        .contact-item .info {
+            flex: 1;
+        }
+        .contact-item .info strong {
+            color: #333;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .contact-item .info span {
+            color: #666;
+        }
+        .map-section {
+            background: white;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .map-section h2 {
+            color: #1e3c72;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .map-placeholder {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+        .back-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+        .back-btn:hover {
+            background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="window-controls">
+        <button class="window-btn close" onclick="window.close()"></button>
+        <button class="window-btn minimize" onclick="window.minimize()"></button>
+        <button class="window-btn maximize" onclick="window.maximize()"></button>
+    </div>
+
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                🛫 花湖国际机场供应链金融平台
+            </div>
+            <nav class="nav">
+                <a href="https://www.hublairport.com/" target="_blank">花湖机场</a>
+                <a href="{{ url_for('register_company') }}">企业注册</a>
+                <a href="{{ url_for('register_bank') }}">银行注册</a>
+                <a href="{{ url_for('loan_application') }}">融资申请</a>
+                <a href="{{ url_for('admin_login') }}">后台管理</a>
+                <a href="{{ url_for('bank_login') }}">融资审批</a>
+                <a href="{{ url_for('about') }}">关于我们</a>
+                <a href="{{ url_for('contact') }}" style="background-color: rgba(255,255,255,0.2);">联系我们</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="contact-section">
+            <h2>联系我们</h2>
+            <p>如果您对花湖国际机场供应链金融平台有任何疑问、建议或合作意向，欢迎通过以下方式与我们联系。我们将竭诚为您提供专业、高效的服务。</p>
+        </div>
+
+        <div class="contact-info">
+            <div class="contact-card">
+                <h3>📍 平台信息</h3>
+                <div class="contact-item">
+                    <i>🏢</i>
+                    <div class="info">
+                        <strong>平台名称</strong>
+                        <span>花湖国际机场供应链金融平台</span>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <i>🌐</i>
+                    <div class="info">
+                        <strong>官方网站</strong>
+                        <span><a href="https://www.hublairport.com/" target="_blank" style="color: #2a5298;">https://www.hublairport.com/</a></span>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <i>📧</i>
+                    <div class="info">
+                        <strong>电子邮箱</strong>
+                        <span>contact@hublairport.com</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="contact-card">
+                <h3>📞 联系方式</h3>
+                <div class="contact-item">
+                    <i>☎️</i>
+                    <div class="info">
+                        <strong>服务热线</strong>
+                        <span>400-888-8888</span>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <i>⏰</i>
+                    <div class="info">
+                        <strong>服务时间</strong>
+                        <span>周一至周五 9:00-18:00</span>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <i>📍</i>
+                    <div class="info">
+                        <strong>办公地址</strong>
+                        <span>湖北省鄂州市花湖国际机场综合办公区</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="contact-card">
+                <h3>🤝 合作咨询</h3>
+                <div class="contact-item">
+                    <i>💼</i>
+                    <div class="info">
+                        <strong>企业合作</strong>
+                        <span>business@hublairport.com</span>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <i>🏦</i>
+                    <div class="info">
+                        <strong>银行合作</strong>
+                        <span>bank@hublairport.com</span>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <i>💡</i>
+                    <div class="info">
+                        <strong>技术支持</strong>
+                        <span>support@hublairport.com</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="map-section">
+            <h2>📍 地理位置</h2>
+            <div class="map-placeholder">
+                <div>
+                    <h3>花湖国际机场位置</h3>
+                    <p>湖北省鄂州市鄂城区燕矶镇花湖国际机场</p>
+                </div>
+            </div>
+        </div>
+
+        <a href="{{ url_for('index') }}" class="back-btn">返回首页</a>
+    </div>
+</body>
+</html>

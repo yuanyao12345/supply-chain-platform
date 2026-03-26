@@ -69,6 +69,11 @@ def index():
 def about():
     return render_template('about.html')
 
+# 联系我们
+@app.route('/contact')
+def contact():
+    return render_template('contact.html')
+
 # 企业注册
 @app.route('/register/company', methods=['GET', 'POST'])
 def register_company():
