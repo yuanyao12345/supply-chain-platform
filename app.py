@@ -7,6 +7,9 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'supersecretkey')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///supply_chain.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.jinja_env.auto_reload = True
+app.jinja_env.cache = {}
 
 db = SQLAlchemy(app)
 
@@ -223,6 +226,6 @@ def admin_logout():
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5001))
+    port = int(os.environ.get('PORT', 5002))
     debug = os.environ.get('FLASK_ENV') == 'development'
     app.run(debug=debug, host='0.0.0.0', port=port)
