@@ -1361,8 +1361,9 @@
         }
 
         let currentNewsGroup = 1;
-        let countdownMinutes = 1;
+        let countdownSeconds = 30;
         let countdownInterval;
+        let pollInterval;
 
         function loadNews(groupId) {
             fetch('/api/news/' + groupId)
@@ -1378,7 +1379,7 @@
                             <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${item.image_prompt}&image_size=landscape_4_3" alt="新闻配图" class="news-thumb">
                             <div class="news-content">
                                 <h3><a href="${item.link}" target="_blank" style="color: #2a5298; text-decoration: none;">${item.title}</a></h3>
-                                <p>${item.content}</p>
+                                <p>${item.source || '新闻来源'}</p>
                                 <span class="news-date">${item.date}</span>
                             </div>
                         `;
@@ -1389,18 +1390,29 @@
         }
 
         function updateCountdown() {
-            countdownMinutes--;
-            if (countdownMinutes <= 0) {
+            countdownSeconds--;
+            if (countdownSeconds <= 0) {
                 currentNewsGroup = currentNewsGroup % 3 + 1;
                 loadNews(currentNewsGroup);
-                countdownMinutes = 1;
+                countdownSeconds = 30;
             }
-            document.getElementById('update-timer').textContent = `（下次更新: ${countdownMinutes}分钟后）`;
+            document.getElementById('update-timer').textContent = `（下次更新: ${countdownSeconds}秒后）`;
+        }
+
+        function startPolling() {
+            // 每30秒轮询一次
+            pollInterval = setInterval(() => {
+                loadNews(currentNewsGroup);
+                console.log('轮询获取最新新闻...');
+            }, 30000);
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成，初始化新闻...');
             loadNews(1);
-            countdownInterval = setInterval(updateCountdown, 60000);
+            document.getElementById('update-timer').textContent = `（下次更新: ${countdownSeconds}秒后）`;
+            countdownInterval = setInterval(updateCountdown, 1000);
+            startPolling();
         });
     </script>
 </body>

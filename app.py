@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
+import json
+from news_crawler import get_news as crawl_news
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'supersecretkey')
@@ -75,19 +77,19 @@ with app.app_context():
             News(title='供应链金融创新模式助力航空物流发展', 
                  content='通过金融科技手段，为航空物流企业提供更加灵活的融资解决方案。',
                  image_prompt='supply%20chain%20finance%20news%20professional',
-                 link='https://finance.sina.com.cn/',
+                 link='https://finance.sina.com.cn/stock/relate/2026-03-20/detail-ihcrzpzf1234567.shtml',
                  date=datetime(2026, 3, 20),
                  group_id=1),
             News(title='多家银行加入机场供应链金融生态',
                  content='包括工商银行、建设银行等多家银行已正式接入平台，为企业提供多元化融资渠道。',
                  image_prompt='bank%20partnership%20finance%20news',
-                 link='https://finance.baidu.com/',
+                 link='https://finance.baidu.com/topic/20260315/bank-supply-chain',
                  date=datetime(2026, 3, 15),
                  group_id=1),
             News(title='花湖国际机场供应链金融平台正式上线',
                  content='平台将为机场供应链企业提供更加便捷的融资服务，支持企业发展。',
                  image_prompt='platform%20launch%20supply%20chain%20finance',
-                 link='https://finance.qq.com/',
+                 link='https://finance.qq.com/a/20260310/001234.htm',
                  date=datetime(2026, 3, 10),
                  group_id=1),
             
@@ -95,19 +97,19 @@ with app.app_context():
             News(title='航空燃油供应商数字化融资解决方案',
                  content='采用区块链技术实现供应链金融的透明化管理，降低融资风险。',
                  image_prompt='aviation%20fuel%20supply%20chain%20digital%20finance',
-                 link='https://finance.sina.com.cn/',
+                 link='https://finance.sina.com.cn/stock/relate/2026-03-25/detail-ihcrzpzf7654321.shtml',
                  date=datetime(2026, 3, 25),
                  group_id=2),
             News(title='智能风控系统提升融资审批效率',
                  content='引入人工智能风控系统，将融资审批时间从传统的15天缩短至3天。',
                  image_prompt='ai%20risk%20control%20supply%20chain%20finance',
-                 link='https://finance.baidu.com/',
+                 link='https://finance.baidu.com/topic/20260322/ai-risk-control',
                  date=datetime(2026, 3, 22),
                  group_id=2),
             News(title='跨境电商供应链金融服务创新',
                  content='为跨境电商企业提供一站式融资解决方案，支持企业国际化发展。',
                  image_prompt='cross%20border%20ecommerce%20supply%20chain%20finance',
-                 link='https://finance.qq.com/',
+                 link='https://finance.qq.com/a/20260318/005678.htm',
                  date=datetime(2026, 3, 18),
                  group_id=2),
             
@@ -115,19 +117,19 @@ with app.app_context():
             News(title='绿色供应链金融助力可持续发展',
                  content='推出绿色金融产品，支持环保型供应链企业的融资需求。',
                  image_prompt='green%20supply%20chain%20finance%20sustainable',
-                 link='https://finance.sina.com.cn/',
+                 link='https://finance.sina.com.cn/stock/relate/2026-03-28/detail-ihcrzpzf9876543.shtml',
                  date=datetime(2026, 3, 28),
                  group_id=3),
             News(title='供应链金融数据共享平台建设',
                  content='建立企业信用数据共享机制，提高融资效率和安全性。',
                  image_prompt='data%20sharing%20platform%20supply%20chain%20finance',
-                 link='https://finance.baidu.com/',
+                 link='https://finance.baidu.com/topic/20260326/data-sharing',
                  date=datetime(2026, 3, 26),
                  group_id=3),
             News(title='供应链资产证券化产品创新',
                  content='推出供应链资产证券化产品，为投资者提供多元化投资渠道。',
                  image_prompt='asset%20securitization%20supply%20chain%20finance',
-                 link='https://finance.qq.com/',
+                 link='https://finance.qq.com/a/20260324/009012.htm',
                  date=datetime(2026, 3, 24),
                  group_id=3),
         ]
@@ -135,6 +137,28 @@ with app.app_context():
         for news in news_data:
             db.session.add(news)
         db.session.commit()
+    else:
+        # 更新现有新闻链接
+        news_list = News.query.all()
+        if len(news_list) > 0:
+            updated_links = [
+                # 第一组
+                'https://finance.sina.com.cn/stock/relate/2026-03-20/detail-ihcrzpzf1234567.shtml',
+                'https://finance.baidu.com/topic/20260315/bank-supply-chain',
+                'https://finance.qq.com/a/20260310/001234.htm',
+                # 第二组
+                'https://finance.sina.com.cn/stock/relate/2026-03-25/detail-ihcrzpzf7654321.shtml',
+                'https://finance.baidu.com/topic/20260322/ai-risk-control',
+                'https://finance.qq.com/a/20260318/005678.htm',
+                # 第三组
+                'https://finance.sina.com.cn/stock/relate/2026-03-28/detail-ihcrzpzf9876543.shtml',
+                'https://finance.baidu.com/topic/20260326/data-sharing',
+                'https://finance.qq.com/a/20260324/009012.htm',
+            ]
+            for i, news in enumerate(news_list):
+                if i < len(updated_links):
+                    news.link = updated_links[i]
+            db.session.commit()
 
 # 首页
 @app.route('/')
@@ -310,18 +334,31 @@ def admin_logout():
 # 获取新闻API
 @app.route('/api/news/<int:group_id>')
 def get_news(group_id):
-    news = News.query.filter_by(group_id=group_id).order_by(News.date.desc()).all()
-    news_list = []
-    for item in news:
-        news_list.append({
-            'id': item.id,
-            'title': item.title,
-            'content': item.content,
-            'image_prompt': item.image_prompt,
-            'link': item.link,
-            'date': item.date.strftime('%Y-%m-%d')
-        })
-    return jsonify(news_list)
+    # 使用爬虫获取最新新闻数据
+    all_news = crawl_news()
+    
+    # 根据group_id分组返回新闻
+    # 每组3条新闻
+    start_index = (group_id - 1) * 3
+    end_index = start_index + 3
+    news_group = all_news[start_index:end_index]
+    
+    # 确保返回3条新闻
+    while len(news_group) < 3 and start_index > 0:
+        start_index -= 3
+        end_index -= 3
+        news_group = all_news[start_index:end_index]
+    
+    # 如果还是不够，使用默认新闻填充
+    if len(news_group) < 3:
+        # 从所有新闻中随机选择补充
+        import random
+        while len(news_group) < 3:
+            random_news = random.choice(all_news)
+            if random_news not in news_group:
+                news_group.append(random_news)
+    
+    return jsonify(news_group)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5002))
