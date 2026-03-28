@@ -1360,27 +1360,26 @@
             document.getElementById('calculatorResult').style.display = 'block';
         }
 
-        let currentNewsGroup = 1;
-        let countdownSeconds = 30;
+        let countdownSeconds = 30; // 30秒
         let countdownInterval;
         let pollInterval;
 
-        function loadNews(groupId) {
-            fetch('/api/news/' + groupId)
+        function loadNews() {
+            fetch('/api/news/1')
                 .then(response => response.json())
                 .then(news => {
                     const newsList = document.getElementById('news-list');
                     newsList.innerHTML = '';
-                    
-                    news.forEach(item => {
+                     
+                    // 显示6条新闻，只展示标题
+                    const displayNews = news.slice(0, 6);
+                    displayNews.forEach(item => {
                         const newsItem = document.createElement('div');
                         newsItem.className = 'news-item';
                         newsItem.innerHTML = `
-                            <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${item.image_prompt}&image_size=landscape_4_3" alt="新闻配图" class="news-thumb">
                             <div class="news-content">
                                 <h3><a href="${item.link}" target="_blank" style="color: #2a5298; text-decoration: none;">${item.title}</a></h3>
-                                <p>${item.source || '新闻来源'}</p>
-                                <span class="news-date">${item.date}</span>
+                                <span class="news-date">${item.date} - ${item.source || '新闻来源'}</span>
                             </div>
                         `;
                         newsList.appendChild(newsItem);
@@ -1389,27 +1388,26 @@
                 .catch(error => console.error('加载新闻失败:', error));
         }
 
-        function updateCountdown() {
-            countdownSeconds--;
-            if (countdownSeconds <= 0) {
-                currentNewsGroup = currentNewsGroup % 3 + 1;
-                loadNews(currentNewsGroup);
-                countdownSeconds = 30;
-            }
-            document.getElementById('update-timer').textContent = `（下次更新: ${countdownSeconds}秒后）`;
-        }
+           function updateCountdown() {
+               countdownSeconds--;
+               if (countdownSeconds <= 0) {
+                   loadNews();
+                   countdownSeconds = 30; // 重置为30秒
+               }
+               document.getElementById('update-timer').textContent = `（下次更新: ${countdownSeconds}秒后）`;
+           }
 
-        function startPolling() {
-            // 每30秒轮询一次
-            pollInterval = setInterval(() => {
-                loadNews(currentNewsGroup);
-                console.log('轮询获取最新新闻...');
-            }, 30000);
-        }
+           function startPolling() {
+               // 每30秒轮询一次
+               pollInterval = setInterval(() => {
+                   loadNews();
+                   console.log('轮询获取最新新闻...');
+               }, 30000);
+           }
 
         document.addEventListener('DOMContentLoaded', function() {
             console.log('页面加载完成，初始化新闻...');
-            loadNews(1);
+            loadNews();
             document.getElementById('update-timer').textContent = `（下次更新: ${countdownSeconds}秒后）`;
             countdownInterval = setInterval(updateCountdown, 1000);
             startPolling();

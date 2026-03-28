@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
 import json
-from news_crawler import get_news as crawl_news
+from news_crawler import get_news
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'supersecretkey')
@@ -333,32 +333,12 @@ def admin_logout():
 
 # 获取新闻API
 @app.route('/api/news/<int:group_id>')
-def get_news(group_id):
-    # 使用爬虫获取最新新闻数据
-    all_news = crawl_news()
+def api_get_news(group_id):
+    # 使用get_news函数获取新闻数据（会从文件中读取或抓取）
+    all_news = get_news()
     
-    # 根据group_id分组返回新闻
-    # 每组3条新闻
-    start_index = (group_id - 1) * 3
-    end_index = start_index + 3
-    news_group = all_news[start_index:end_index]
-    
-    # 确保返回3条新闻
-    while len(news_group) < 3 and start_index > 0:
-        start_index -= 3
-        end_index -= 3
-        news_group = all_news[start_index:end_index]
-    
-    # 如果还是不够，使用默认新闻填充
-    if len(news_group) < 3:
-        # 从所有新闻中随机选择补充
-        import random
-        while len(news_group) < 3:
-            random_news = random.choice(all_news)
-            if random_news not in news_group:
-                news_group.append(random_news)
-    
-    return jsonify(news_group)
+    # 返回所有新闻，确保至少有6条
+    return jsonify(all_news[:6])
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5002))
