@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
 import json
-from news_crawler import get_news
+from news_crawler import get_news, get_cases, get_policies
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'supersecretkey')
@@ -330,6 +330,29 @@ def bank_logout():
 def admin_logout():
     session.pop('admin_id', None)
     return redirect(url_for('index'))
+
+# 获取供应链金融案例API
+@app.route('/api/cases')
+def api_get_cases():
+    # 使用get_cases函数获取案例数据（会从文件中读取或抓取）
+    all_cases = get_cases()
+    
+    # 返回所有案例，确保至少有3个
+    return jsonify(all_cases[:3])
+
+# 获取政策资讯API
+@app.route('/api/policies')
+def api_get_policies():
+    # 使用get_policies函数获取政策数据（会从文件中读取或抓取）
+    all_policies = get_policies()
+    
+    # 返回所有政策，确保至少有3条
+    return jsonify(all_policies[:3])
+
+# 测试路由
+@app.route('/api/test')
+def api_test():
+    return jsonify({'message': 'Test route works!'})
 
 # 获取新闻API
 @app.route('/api/news/<int:group_id>')

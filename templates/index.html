@@ -982,27 +982,8 @@
         </style>
         <div class="bottom-section">
             <div class="case-section">
-                <h2>供应链金融案例</h2>
-                <div class="case-item">
-                    <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=aviation%20fuel%20supply%20chain%20case&image_size=landscape_4_3" alt="案例配图" class="case-thumb">
-                    <div class="case-content">
-                        <h3><a href="https://finance.sina.com.cn/" target="_blank" style="color: #2a5298; text-decoration: none;">航空燃油供应商融资案例</a></h3>
-                        <p>某航空燃油供应商通过平台申请1000万元融资，用于采购航空燃油，银行审批时间从传统的15天缩短至3天。</p>
-                    </div>
-                </div>
-                <div class="case-item">
-                    <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=airport%20catering%20service%20finance%20case&image_size=landscape_4_3" alt="案例配图" class="case-thumb">
-                    <div class="case-content">
-                        <h3><a href="https://finance.baidu.com/" target="_blank" style="color: #2a5298; text-decoration: none;">机场餐饮服务商融资案例</a></h3>
-                        <p>机场餐饮服务商通过平台申请500万元融资，用于设备升级和食材采购，成功获得银行批准。</p>
-                    </div>
-                </div>
-                <div class="case-item">
-                    <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=logistics%20warehouse%20finance%20case&image_size=landscape_4_3" alt="案例配图" class="case-thumb">
-                    <div class="case-content">
-                        <h3><a href="https://finance.qq.com/" target="_blank" style="color: #2a5298; text-decoration: none;">物流仓储企业融资案例</a></h3>
-                        <p>物流仓储企业通过平台申请800万元融资，用于仓库扩建，银行根据企业历史交易数据快速审批通过。</p>
-                    </div>
+                <h2>供应链金融案例 <span style="font-size: 12px; color: #999; font-weight: normal;" id="cases-timer">（下次更新: 1天后）</span></h2>
+                <div id="cases-list">
                 </div>
             </div>
             <style>
@@ -1221,24 +1202,8 @@
 
         <!-- 政策资讯区 -->
         <div class="policy-section">
-            <h2>政策资讯</h2>
-            <div class="policy-item">
-                <h3>国务院关于促进供应链金融发展的指导意见</h3>
-                <p>鼓励金融机构依托核心企业信用，为上下游中小企业提供融资服务，推动供应链金融创新发展。</p>
-                <span class="policy-date">发布时间：2026-02-15</span>
-                <a href="https://www.gov.cn/" target="_blank" class="policy-link">查看详情 →</a>
-            </div>
-            <div class="policy-item">
-                <h3>湖北省支持航空物流产业发展若干措施</h3>
-                <p>加大对航空物流企业的金融支持力度，完善供应链金融服务体系，促进产业转型升级。</p>
-                <span class="policy-date">发布时间：2026-01-20</span>
-                <a href="https://www.hubei.gov.cn/" target="_blank" class="policy-link">查看详情 →</a>
-            </div>
-            <div class="policy-item">
-                <h3>人民银行关于深化供应链金融服务的通知</h3>
-                <p>推动金融机构创新供应链金融产品和服务，提升对实体经济的支持力度。</p>
-                <span class="policy-date">发布时间：2026-01-10</span>
-                <a href="https://www.pbc.gov.cn/" target="_blank" class="policy-link">查看详情 →</a>
+            <h2>政策资讯 <span style="font-size: 12px; color: #999; font-weight: normal;" id="policies-timer">（下次更新: 1天后）</span></h2>
+            <div id="policies-list">
             </div>
         </div>
 
@@ -1370,7 +1335,7 @@
                 .then(news => {
                     const newsList = document.getElementById('news-list');
                     newsList.innerHTML = '';
-                     
+                      
                     // 显示6条新闻，只展示标题
                     const displayNews = news.slice(0, 6);
                     displayNews.forEach(item => {
@@ -1388,6 +1353,53 @@
                 .catch(error => console.error('加载新闻失败:', error));
         }
 
+        function loadCases() {
+            fetch('/api/cases')
+                .then(response => response.json())
+                .then(cases => {
+                    const casesList = document.getElementById('cases-list');
+                    casesList.innerHTML = '';
+                      
+                    // 显示3个案例
+                    cases.forEach(item => {
+                        const caseItem = document.createElement('div');
+                        caseItem.className = 'case-item';
+                        caseItem.innerHTML = `
+                            <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${encodeURIComponent(item.title)}%20supply%20chain%20finance%20case%20professional&image_size=landscape_4_3" alt="案例配图" class="case-thumb">
+                            <div class="case-content">
+                                <h3><a href="${item.link}" target="_blank" style="color: #2a5298; text-decoration: none;">${item.title}</a></h3>
+                                <p>${item.content}</p>
+                            </div>
+                        `;
+                        casesList.appendChild(caseItem);
+                    });
+                })
+                .catch(error => console.error('加载案例失败:', error));
+        }
+
+        function loadPolicies() {
+            fetch('/api/policies')
+                .then(response => response.json())
+                .then(policies => {
+                    const policiesList = document.getElementById('policies-list');
+                    policiesList.innerHTML = '';
+                      
+                    // 显示3条政策
+                    policies.forEach(item => {
+                        const policyItem = document.createElement('div');
+                        policyItem.className = 'policy-item';
+                        policyItem.innerHTML = `
+                            <h3>${item.title}</h3>
+                            <p>${item.content}</p>
+                            <span class="policy-date">发布时间：${item.date}</span>
+                            <a href="${item.link}" target="_blank" class="policy-link">查看详情 →</a>
+                        `;
+                        policiesList.appendChild(policyItem);
+                    });
+                })
+                .catch(error => console.error('加载政策失败:', error));
+        }
+
            function updateCountdown() {
                countdownSeconds--;
                if (countdownSeconds <= 0) {
@@ -1398,7 +1410,7 @@
            }
 
            function startPolling() {
-               // 每30秒轮询一次
+               // 每30秒轮询一次新闻
                pollInterval = setInterval(() => {
                    loadNews();
                    console.log('轮询获取最新新闻...');
@@ -1406,11 +1418,18 @@
            }
 
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('页面加载完成，初始化新闻...');
+            console.log('页面加载完成，初始化数据...');
+            // 加载新闻
             loadNews();
             document.getElementById('update-timer').textContent = `（下次更新: ${countdownSeconds}秒后）`;
             countdownInterval = setInterval(updateCountdown, 1000);
             startPolling();
+            
+            // 加载案例
+            loadCases();
+            
+            // 加载政策资讯
+            loadPolicies();
         });
     </script>
 </body>
