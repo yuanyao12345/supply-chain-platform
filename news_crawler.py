@@ -192,7 +192,7 @@ def extract_content(url):
     try:
         response = requests.get(url, timeout=10)
         response.encoding = 'utf-8'
-        soup = BeautifulSoup(response.text, 'lxml')
+        soup = BeautifulSoup(response.text, 'html.parser')
         
         # 尝试不同的内容选择器
         content_selectors = [
@@ -243,7 +243,7 @@ def crawl_news():
                         print(f'搜索 {source["name"]} 失败: 状态码 {response.status_code}')
                         continue
                     
-                    soup = BeautifulSoup(response.text, 'lxml')
+                    soup = BeautifulSoup(response.text, 'html.parser')
                     
                     # 尝试使用多个选择器
                     selectors = [
@@ -381,7 +381,7 @@ def crawl_news():
                     print(f'抓取 {source["name"]} 失败: 状态码 {response.status_code}')
                     continue
                 
-                soup = BeautifulSoup(response.text, 'lxml')
+                soup = BeautifulSoup(response.text, 'html.parser')
                 
                 # 尝试使用多个选择器
                 selectors = [
@@ -559,7 +559,7 @@ def crawl_news():
                     print(f'抓取备用来源 {source["name"]} 失败: 状态码 {response.status_code}')
                     continue
                 
-                soup = BeautifulSoup(response.text, 'lxml')
+                soup = BeautifulSoup(response.text, 'html.parser')
                 
                 # 尝试使用多个选择器
                 selectors = [
@@ -800,7 +800,7 @@ def crawl_cases():
                     print(f'搜索 {source["name"]} 失败: 状态码 {response.status_code}')
                     continue
                 
-                soup = BeautifulSoup(response.text, 'lxml')
+                soup = BeautifulSoup(response.text, 'html.parser')
                 items = soup.select(source['selector'])
                 
                 for item in items[:10]:
@@ -945,7 +945,7 @@ def crawl_policies():
                     print(f'搜索 {source["name"]} 失败: 状态码 {response.status_code}')
                     continue
                 
-                soup = BeautifulSoup(response.text, 'lxml')
+                soup = BeautifulSoup(response.text, 'html.parser')
                 items = soup.select(source['selector'])
                 
                 for item in items[:10]:
