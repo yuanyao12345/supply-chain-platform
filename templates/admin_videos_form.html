@@ -50,7 +50,7 @@
         </div>
         
         <div class="section">
-            <form method="POST">
+            <form method="POST" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="title">视频标题 *</label>
                     <input type="text" id="title" name="title" required value="{{ video.title if video else '' }}">
@@ -62,9 +62,21 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="video_url">视频链接 *</label>
-                    <input type="url" id="video_url" name="video_url" required value="{{ video.video_url if video else '' }}">
+                    <label for="video_file">上传视频文件</label>
+                    <input type="file" id="video_file" name="video_file" accept="video/*">
+                    <p class="hint">支持 MP4、WebM、OGG、MOV、AVI、WMV、FLV 格式，最大100MB</p>
+                    {% if video and video.video_path %}
+                    <p class="hint" style="color: #28a745;">当前：已上传文件</p>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="video_url">或 视频链接</label>
+                    <input type="url" id="video_url" name="video_url" value="{{ video.video_url if video else '' }}">
                     <p class="hint">支持 YouTube、B站、腾讯视频等视频链接</p>
+                    {% if video and video.video_url %}
+                    <p class="hint" style="color: #28a745;">当前：{{ video.video_url }}</p>
+                    {% endif %}
                 </div>
                 
                 <div class="form-group">

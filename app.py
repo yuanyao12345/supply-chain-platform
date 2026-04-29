@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
 import json
+from werkzeug.utils import secure_filename
 from news_crawler import get_news, get_cases, get_policies
 
 app = Flask(__name__)
@@ -12,6 +13,18 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.jinja_env.auto_reload = True
 app.jinja_env.cache = {}
+
+# 文件上传配置
+app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB
+ALLOWED_EXTENSIONS = {'mp4', 'webm', 'ogg', 'mov', 'avi', 'wmv', 'flv'}
+
+# 确保上传目录存在
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# 检查文件扩展名是否允许
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 db = SQLAlchemy(app)
 
@@ -75,7 +88,8 @@ class PlatformVideo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=False)
-    video_url = db.Column(db.String(300), nullable=False)
+    video_url = db.Column(db.String(300))  # 外部链接
+    video_path = db.Column(db.String(300))  # 上传文件路径
     thumbnail_url = db.Column(db.String(300))
     date = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -486,10 +500,25 @@ def admin_videos_add():
     if 'admin_id' not in session:
         return redirect(url_for('admin_login'))
     if request.method == 'POST':
+        video_url = request.form.get('video_url')
+        video_path = None
+        
+        # 处理文件上传
+        if 'video_file' in request.files:
+            file = request.files['video_file']
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                # 生成唯一文件名
+                filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(file_path)
+                video_path = filename
+        
         video = PlatformVideo(
             title=request.form['title'],
             description=request.form['description'],
-            video_url=request.form['video_url'],
+            video_url=video_url,
+            video_path=video_path,
             thumbnail_url=request.form.get('thumbnail_url')
         )
         db.session.add(video)
@@ -508,8 +537,26 @@ def admin_videos_edit(id):
     if request.method == 'POST':
         video.title = request.form['title']
         video.description = request.form['description']
-        video.video_url = request.form['video_url']
+        video.video_url = request.form.get('video_url')
         video.thumbnail_url = request.form.get('thumbnail_url')
+        
+        # 处理文件上传
+        if 'video_file' in request.files:
+            file = request.files['video_file']
+            if file and allowed_file(file.filename):
+                # 删除旧文件
+                if video.video_path:
+                    old_file_path = os.path.join(app.config['UPLOAD_FOLDER'], video.video_path)
+                    if os.path.exists(old_file_path):
+                        os.remove(old_file_path)
+                
+                # 保存新文件
+                filename = secure_filename(file.filename)
+                filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(file_path)
+                video.video_path = filename
+        
         db.session.commit()
         return redirect(url_for('admin_videos'))
     return render_template('admin_videos_form.html', video=video)
@@ -521,6 +568,11 @@ def admin_videos_delete(id):
         return redirect(url_for('admin_login'))
     video = PlatformVideo.query.get(id)
     if video:
+        # 删除关联的视频文件
+        if video.video_path:
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], video.video_path)
+            if os.path.exists(file_path):
+                os.remove(file_path)
         db.session.delete(video)
         db.session.commit()
     return redirect(url_for('admin_videos'))
@@ -651,16 +703,26 @@ def api_get_videos():
     db_videos = PlatformVideo.query.order_by(PlatformVideo.date.desc()).limit(10).all()
     videos_list = []
     for video in db_videos:
+        # 优先使用上传的视频文件
+        video_src = video.video_url
+        if video.video_path:
+            video_src = url_for('uploaded_file', filename=video.video_path)
+        
         videos_list.append({
             'id': video.id,
             'title': video.title,
             'description': video.description,
-            'video_url': video.video_url,
+            'video_url': video_src,
             'thumbnail_url': video.thumbnail_url,
             'date': video.date.strftime('%Y-%m-%d %H:%M')
         })
     
     return jsonify(videos_list)
+
+# 访问上传的视频文件
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 # 测试路由
 @app.route('/api/test')
