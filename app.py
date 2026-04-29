@@ -583,19 +583,84 @@ def admin_policies_delete(id):
 @app.route('/api/cases')
 def api_get_cases():
     # 使用get_cases函数获取案例数据（会从文件中读取或抓取）
-    all_cases = get_cases()
+    crawler_cases = get_cases()
     
-    # 返回所有案例，确保至少有3个
-    return jsonify(all_cases[:3])
+    # 获取数据库中的案例
+    db_cases = FinanceCase.query.order_by(FinanceCase.date.desc()).limit(10).all()
+    db_cases_list = []
+    for case in db_cases:
+        db_cases_list.append({
+            'id': case.id,
+            'title': case.title,
+            'content': case.content,
+            'link': case.link,
+            'date': case.date.strftime('%Y-%m-%d %H:%M'),
+            'source': case.source,
+            'image_prompt': case.image_prompt
+        })
+    
+    # 合并爬虫案例和数据库案例，数据库案例优先
+    all_cases = db_cases_list + crawler_cases
+    
+    # 去重：以title为基准
+    seen_titles = set()
+    unique_cases = []
+    for case in all_cases:
+        if case['title'] not in seen_titles:
+            seen_titles.add(case['title'])
+            unique_cases.append(case)
+    
+    return jsonify(unique_cases[:6])
 
 # 获取政策资讯API
 @app.route('/api/policies')
 def api_get_policies():
     # 使用get_policies函数获取政策数据（会从文件中读取或抓取）
-    all_policies = get_policies()
+    crawler_policies = get_policies()
     
-    # 返回所有政策，确保至少有3条
-    return jsonify(all_policies[:3])
+    # 获取数据库中的政策
+    db_policies = Policy.query.order_by(Policy.date.desc()).limit(10).all()
+    db_policies_list = []
+    for policy in db_policies:
+        db_policies_list.append({
+            'id': policy.id,
+            'title': policy.title,
+            'content': policy.content,
+            'link': policy.link,
+            'date': policy.date.strftime('%Y-%m-%d %H:%M'),
+            'source': policy.source
+        })
+    
+    # 合并爬虫政策和数据库政策，数据库政策优先
+    all_policies = db_policies_list + crawler_policies
+    
+    # 去重：以title为基准
+    seen_titles = set()
+    unique_policies = []
+    for policy in all_policies:
+        if policy['title'] not in seen_titles:
+            seen_titles.add(policy['title'])
+            unique_policies.append(policy)
+    
+    return jsonify(unique_policies[:6])
+
+# 获取平台视频API
+@app.route('/api/videos')
+def api_get_videos():
+    # 获取数据库中的视频
+    db_videos = PlatformVideo.query.order_by(PlatformVideo.date.desc()).limit(10).all()
+    videos_list = []
+    for video in db_videos:
+        videos_list.append({
+            'id': video.id,
+            'title': video.title,
+            'description': video.description,
+            'video_url': video.video_url,
+            'thumbnail_url': video.thumbnail_url,
+            'date': video.date.strftime('%Y-%m-%d %H:%M')
+        })
+    
+    return jsonify(videos_list)
 
 # 测试路由
 @app.route('/api/test')
