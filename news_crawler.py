@@ -136,18 +136,21 @@ NEWS_SOURCES = [
 # 行业关键词
 KEYWORDS = ['供应链', '金融', '物流', '航空', '货运', '融资', '供应链金融']
 
+# 获取当前脚本所在目录
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # 新闻数据文件路径
-NEWS_FILE = 'news.json'
+NEWS_FILE = os.path.join(BASE_DIR, 'news.json')
 # 新闻数据过期时间（秒）
 NEWS_EXPIRY = 30  # 30秒
 
 # 供应链金融案例数据文件路径
-CASES_FILE = 'cases.json'
+CASES_FILE = os.path.join(BASE_DIR, 'cases.json')
 # 案例数据过期时间（秒）
 CASES_EXPIRY = 86400  # 1天
 
 # 政策资讯数据文件路径
-POLICIES_FILE = 'policies.json'
+POLICIES_FILE = os.path.join(BASE_DIR, 'policies.json')
 # 政策资讯过期时间（秒）
 POLICIES_EXPIRY = 86400  # 1天
 
