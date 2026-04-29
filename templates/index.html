@@ -1031,6 +1031,14 @@
         <!-- 数据统计展示区 -->
         <div class="stats-section">
             <div class="stats-grid">
+                {% if stats %}
+                    {% for stat in stats %}
+                    <div class="stat-item">
+                        <span class="stat-number">{{ stat.value }}{{ stat.suffix or '' }}</span>
+                        <span class="stat-label">{{ stat.label }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
                 <div class="stat-item">
                     <span class="stat-number">50+</span>
                     <span class="stat-label">入驻企业</span>
@@ -1047,6 +1055,7 @@
                     <span class="stat-number">3 天</span>
                     <span class="stat-label">平均审批时效</span>
                 </div>
+                {% endif %}
             </div>
         </div>
 
@@ -1054,6 +1063,15 @@
         <div class="features-section">
             <h2>平台优势</h2>
             <div class="feature-grid">
+                {% if features %}
+                    {% for feature in features %}
+                    <div class="feature-item">
+                        <div class="feature-icon">{{ feature.icon or '📦' }}</div>
+                        <h3>{{ feature.title }}</h3>
+                        <p>{{ feature.description or '' }}</p>
+                    </div>
+                    {% endfor %}
+                {% else %}
                 <div class="feature-item">
                     <div class="feature-icon">🚀</div>
                     <h3>快速审批</h3>
@@ -1074,6 +1092,7 @@
                     <h3>便捷操作</h3>
                     <p>全流程线上化，随时随地申请融资</p>
                 </div>
+                {% endif %}
             </div>
         </div>
 
@@ -1081,12 +1100,18 @@
         <div class="partners-section">
             <h2>合作银行</h2>
             <div class="bank-logos">
+                {% if partners %}
+                    {% for partner in partners %}
+                    <div class="bank-logo">{{ partner.name }}</div>
+                    {% endfor %}
+                {% else %}
                 <div class="bank-logo">工商银行</div>
                 <div class="bank-logo">建设银行</div>
                 <div class="bank-logo">中国银行</div>
                 <div class="bank-logo">农业银行</div>
                 <div class="bank-logo">招商银行</div>
                 <div class="bank-logo">交通银行</div>
+                {% endif %}
             </div>
         </div>
 
@@ -1094,6 +1119,15 @@
         <div class="process-section">
             <h2>融资流程</h2>
             <div class="process-steps">
+                {% if process_steps %}
+                    {% for step in process_steps %}
+                    <div class="step">
+                        <div class="step-number">{{ step.step_number }}</div>
+                        <h4>{{ step.title }}</h4>
+                        <p>{{ step.description or '' }}</p>
+                    </div>
+                    {% endfor %}
+                {% else %}
                 <div class="step">
                     <div class="step-number">1</div>
                     <h4>在线注册</h4>
@@ -1114,6 +1148,7 @@
                     <h4>签约放款</h4>
                     <p>电子签约，资金快速到账</p>
                 </div>
+                {% endif %}
             </div>
         </div>
 
@@ -1128,6 +1163,19 @@
         <!-- 常见问题FAQ区 -->
         <div class="faq-section">
             <h2>常见问题</h2>
+            {% if faqs %}
+                {% for faq in faqs %}
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        {{ faq.question }}
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        {{ faq.answer }}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
             <div class="faq-item">
                 <div class="faq-question" onclick="toggleFaq(this)">
                     哪些企业可以申请融资？
@@ -1164,6 +1212,7 @@
                     融资利率根据企业信用状况、融资金额、期限等因素综合确定，依托机场信用背书，可享受优惠利率。
                 </div>
             </div>
+            {% endif %}
         </div>
 
         <!-- 融资计算器 -->
@@ -1211,6 +1260,21 @@
         <div class="testimonials-section">
             <h2>用户评价</h2>
             <div class="testimonials-grid">
+                {% if testimonials %}
+                    {% for t in testimonials %}
+                    <div class="testimonial-card">
+                        <div class="testimonial-quote">"</div>
+                        <p class="testimonial-text">{{ t.content }}</p>
+                        <div class="testimonial-author">
+                            <div class="testimonial-avatar">{{ t.name[0] }}</div>
+                            <div class="testimonial-info">
+                                <h4>{{ t.name }}{% if t.role %} ({{ t.role }}){% endif %}</h4>
+                                <p>{{ t.company or '' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
                 <div class="testimonial-card">
                     <div class="testimonial-quote">"</div>
                     <p class="testimonial-text">花湖国际机场供应链金融平台为我们提供了便捷的融资渠道，审批速度快，服务专业，帮助我们解决了资金周转难题。</p>
@@ -1244,6 +1308,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>

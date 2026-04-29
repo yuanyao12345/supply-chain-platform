@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if feature %}编辑特色服务{% else %}添加特色服务{% endif %} - 花湖国际机场供应链金融平台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f5f5f5; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 20px; }
+        .header-content { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 24px; font-weight: bold; }
+        .nav { display: flex; gap: 20px; flex-wrap: wrap; }
+        .nav a { color: white; text-decoration: none; padding: 8px 16px; border-radius: 4px; transition: background 0.3s; }
+        .nav a:hover { background: rgba(255,255,255,0.1); }
+        .container { max-width: 800px; margin: 30px auto; padding: 0 20px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .page-header h1 { color: #1e3c72; }
+        .btn { padding: 10px 20px; background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; text-decoration: none; border-radius: 6px; font-weight: bold; transition: transform 0.3s; display: inline-block; border: none; cursor: pointer; }
+        .btn:hover { transform: translateY(-2px); }
+        .btn-secondary { background: #6c757d; }
+        .section { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 30px; position: relative; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        .form-group textarea { height: 100px; resize: vertical; }
+        .form-actions { display: flex; gap: 15px; margin-top: 30px; }
+        .hint { font-size: 12px; color: #666; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">花湖国际机场供应链金融平台</div>
+            <nav class="nav">
+                <a href="{{ url_for('admin_dashboard') }}">仪表盘</a>
+                <a href="{{ url_for('admin_features') }}">返回列表</a>
+                <a href="{{ url_for('admin_logout') }}">退出</a>
+            </nav>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="page-header">
+            <h1>{% if feature %}编辑特色服务{% else %}添加特色服务{% endif %}</h1>
+        </div>
+        
+        <div class="section">
+            <form method="POST">
+                <div class="form-group">
+                    <label for="title">服务标题 *</label>
+                    <input type="text" id="title" name="title" required value="{{ feature.title if feature else '' }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">服务描述</label>
+                    <textarea id="description" name="description">{{ feature.description if feature else '' }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="icon">图标（ emoji 或字体图标类名）</label>
+                    <input type="text" id="icon" name="icon" value="{{ feature.icon if feature else '' }}" placeholder="如：🚀、📦、💰、fa-truck">
+                    <p class="hint">可以使用 emoji 或 Font Awesome 图标类名</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="order">排序权重</label>
+                    <input type="number" id="order" name="order" value="{{ feature.order if feature else 0 }}">
+                    <p class="hint">数字越小排序越靠前</p>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn">{% if feature %}保存修改{% else %}添加{% endif %}</button>
+                    <a href="{{ url_for('admin_features') }}" class="btn btn-secondary">取消</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

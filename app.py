@@ -101,6 +101,62 @@ class Policy(db.Model):
     source = db.Column(db.String(100))
     date = db.Column(db.DateTime, default=datetime.utcnow)
 
+# 合作伙伴
+class Partner(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    logo_url = db.Column(db.String(300))
+    website = db.Column(db.String(200))
+    description = db.Column(db.Text)
+    order = db.Column(db.Integer, default=0)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+
+# 特色服务
+class Feature(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    icon = db.Column(db.String(50))
+    order = db.Column(db.Integer, default=0)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+
+# 服务流程
+class ProcessStep(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    icon = db.Column(db.String(50))
+    step_number = db.Column(db.Integer, default=1)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+
+# 常见问题
+class FAQ(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    question = db.Column(db.String(300), nullable=False)
+    answer = db.Column(db.Text, nullable=False)
+    order = db.Column(db.Integer, default=0)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+
+# 用户评价/成功案例
+class Testimonial(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    company = db.Column(db.String(100))
+    role = db.Column(db.String(100))
+    content = db.Column(db.Text, nullable=False)
+    avatar_url = db.Column(db.String(300))
+    rating = db.Column(db.Integer, default=5)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+
+# 统计数据
+class Stat(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    label = db.Column(db.String(100), nullable=False)
+    value = db.Column(db.String(50), nullable=False)
+    suffix = db.Column(db.String(20))
+    order = db.Column(db.Integer, default=0)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+
 # 创建数据库
 with app.app_context():
     db.create_all()
@@ -203,7 +259,21 @@ with app.app_context():
 # 首页
 @app.route('/')
 def index():
-    return render_template('index.html')
+    partners = Partner.query.order_by(Partner.order.asc()).limit(12).all()
+    features = Feature.query.order_by(Feature.order.asc()).limit(6).all()
+    process_steps = ProcessStep.query.order_by(ProcessStep.step_number.asc()).limit(6).all()
+    faqs = FAQ.query.order_by(FAQ.order.asc()).limit(6).all()
+    testimonials = Testimonial.query.order_by(Testimonial.date.desc()).limit(3).all()
+    stats = Stat.query.order_by(Stat.order.asc()).limit(4).all()
+    
+    return render_template('index.html', 
+        partners=partners,
+        features=features,
+        process_steps=process_steps,
+        faqs=faqs,
+        testimonials=testimonials,
+        stats=stats
+    )
 
 # 关于我们
 @app.route('/about')
@@ -630,6 +700,310 @@ def admin_policies_delete(id):
         db.session.delete(policy)
         db.session.commit()
     return redirect(url_for('admin_policies'))
+
+# ========== 合作伙伴管理 ==========
+@app.route('/admin/partners')
+def admin_partners():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    partners = Partner.query.order_by(Partner.order.asc(), Partner.date.desc()).all()
+    return render_template('admin_partners.html', partners=partners)
+
+@app.route('/admin/partners/add', methods=['GET', 'POST'])
+def admin_partners_add():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    if request.method == 'POST':
+        partner = Partner(
+            name=request.form['name'],
+            logo_url=request.form.get('logo_url'),
+            website=request.form.get('website'),
+            description=request.form.get('description'),
+            order=request.form.get('order', type=int, default=0)
+        )
+        db.session.add(partner)
+        db.session.commit()
+        return redirect(url_for('admin_partners'))
+    return render_template('admin_partners_form.html')
+
+@app.route('/admin/partners/edit/<int:id>', methods=['GET', 'POST'])
+def admin_partners_edit(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    partner = Partner.query.get(id)
+    if not partner:
+        return redirect(url_for('admin_partners'))
+    if request.method == 'POST':
+        partner.name = request.form['name']
+        partner.logo_url = request.form.get('logo_url')
+        partner.website = request.form.get('website')
+        partner.description = request.form.get('description')
+        partner.order = request.form.get('order', type=int, default=0)
+        db.session.commit()
+        return redirect(url_for('admin_partners'))
+    return render_template('admin_partners_form.html', partner=partner)
+
+@app.route('/admin/partners/delete/<int:id>')
+def admin_partners_delete(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    partner = Partner.query.get(id)
+    if partner:
+        db.session.delete(partner)
+        db.session.commit()
+    return redirect(url_for('admin_partners'))
+
+# ========== 特色服务管理 ==========
+@app.route('/admin/features')
+def admin_features():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    features = Feature.query.order_by(Feature.order.asc(), Feature.date.desc()).all()
+    return render_template('admin_features.html', features=features)
+
+@app.route('/admin/features/add', methods=['GET', 'POST'])
+def admin_features_add():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    if request.method == 'POST':
+        feature = Feature(
+            title=request.form['title'],
+            description=request.form.get('description'),
+            icon=request.form.get('icon'),
+            order=request.form.get('order', type=int, default=0)
+        )
+        db.session.add(feature)
+        db.session.commit()
+        return redirect(url_for('admin_features'))
+    return render_template('admin_features_form.html')
+
+@app.route('/admin/features/edit/<int:id>', methods=['GET', 'POST'])
+def admin_features_edit(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    feature = Feature.query.get(id)
+    if not feature:
+        return redirect(url_for('admin_features'))
+    if request.method == 'POST':
+        feature.title = request.form['title']
+        feature.description = request.form.get('description')
+        feature.icon = request.form.get('icon')
+        feature.order = request.form.get('order', type=int, default=0)
+        db.session.commit()
+        return redirect(url_for('admin_features'))
+    return render_template('admin_features_form.html', feature=feature)
+
+@app.route('/admin/features/delete/<int:id>')
+def admin_features_delete(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    feature = Feature.query.get(id)
+    if feature:
+        db.session.delete(feature)
+        db.session.commit()
+    return redirect(url_for('admin_features'))
+
+# ========== 服务流程管理 ==========
+@app.route('/admin/process')
+def admin_process():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    steps = ProcessStep.query.order_by(ProcessStep.step_number.asc(), ProcessStep.date.desc()).all()
+    return render_template('admin_process.html', steps=steps)
+
+@app.route('/admin/process/add', methods=['GET', 'POST'])
+def admin_process_add():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    if request.method == 'POST':
+        step = ProcessStep(
+            title=request.form['title'],
+            description=request.form.get('description'),
+            icon=request.form.get('icon'),
+            step_number=request.form.get('step_number', type=int, default=1)
+        )
+        db.session.add(step)
+        db.session.commit()
+        return redirect(url_for('admin_process'))
+    return render_template('admin_process_form.html')
+
+@app.route('/admin/process/edit/<int:id>', methods=['GET', 'POST'])
+def admin_process_edit(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    step = ProcessStep.query.get(id)
+    if not step:
+        return redirect(url_for('admin_process'))
+    if request.method == 'POST':
+        step.title = request.form['title']
+        step.description = request.form.get('description')
+        step.icon = request.form.get('icon')
+        step.step_number = request.form.get('step_number', type=int, default=1)
+        db.session.commit()
+        return redirect(url_for('admin_process'))
+    return render_template('admin_process_form.html', step=step)
+
+@app.route('/admin/process/delete/<int:id>')
+def admin_process_delete(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    step = ProcessStep.query.get(id)
+    if step:
+        db.session.delete(step)
+        db.session.commit()
+    return redirect(url_for('admin_process'))
+
+# ========== 常见问题管理 ==========
+@app.route('/admin/faqs')
+def admin_faqs():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    faqs = FAQ.query.order_by(FAQ.order.asc(), FAQ.date.desc()).all()
+    return render_template('admin_faqs.html', faqs=faqs)
+
+@app.route('/admin/faqs/add', methods=['GET', 'POST'])
+def admin_faqs_add():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    if request.method == 'POST':
+        faq = FAQ(
+            question=request.form['question'],
+            answer=request.form['answer'],
+            order=request.form.get('order', type=int, default=0)
+        )
+        db.session.add(faq)
+        db.session.commit()
+        return redirect(url_for('admin_faqs'))
+    return render_template('admin_faqs_form.html')
+
+@app.route('/admin/faqs/edit/<int:id>', methods=['GET', 'POST'])
+def admin_faqs_edit(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    faq = FAQ.query.get(id)
+    if not faq:
+        return redirect(url_for('admin_faqs'))
+    if request.method == 'POST':
+        faq.question = request.form['question']
+        faq.answer = request.form['answer']
+        faq.order = request.form.get('order', type=int, default=0)
+        db.session.commit()
+        return redirect(url_for('admin_faqs'))
+    return render_template('admin_faqs_form.html', faq=faq)
+
+@app.route('/admin/faqs/delete/<int:id>')
+def admin_faqs_delete(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    faq = FAQ.query.get(id)
+    if faq:
+        db.session.delete(faq)
+        db.session.commit()
+    return redirect(url_for('admin_faqs'))
+
+# ========== 用户评价管理 ==========
+@app.route('/admin/testimonials')
+def admin_testimonials():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    testimonials = Testimonial.query.order_by(Testimonial.date.desc()).all()
+    return render_template('admin_testimonials.html', testimonials=testimonials)
+
+@app.route('/admin/testimonials/add', methods=['GET', 'POST'])
+def admin_testimonials_add():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    if request.method == 'POST':
+        testimonial = Testimonial(
+            name=request.form['name'],
+            company=request.form.get('company'),
+            role=request.form.get('role'),
+            content=request.form['content'],
+            avatar_url=request.form.get('avatar_url'),
+            rating=request.form.get('rating', type=int, default=5)
+        )
+        db.session.add(testimonial)
+        db.session.commit()
+        return redirect(url_for('admin_testimonials'))
+    return render_template('admin_testimonials_form.html')
+
+@app.route('/admin/testimonials/edit/<int:id>', methods=['GET', 'POST'])
+def admin_testimonials_edit(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    testimonial = Testimonial.query.get(id)
+    if not testimonial:
+        return redirect(url_for('admin_testimonials'))
+    if request.method == 'POST':
+        testimonial.name = request.form['name']
+        testimonial.company = request.form.get('company')
+        testimonial.role = request.form.get('role')
+        testimonial.content = request.form['content']
+        testimonial.avatar_url = request.form.get('avatar_url')
+        testimonial.rating = request.form.get('rating', type=int, default=5)
+        db.session.commit()
+        return redirect(url_for('admin_testimonials'))
+    return render_template('admin_testimonials_form.html', testimonial=testimonial)
+
+@app.route('/admin/testimonials/delete/<int:id>')
+def admin_testimonials_delete(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    testimonial = Testimonial.query.get(id)
+    if testimonial:
+        db.session.delete(testimonial)
+        db.session.commit()
+    return redirect(url_for('admin_testimonials'))
+
+# ========== 统计数据管理 ==========
+@app.route('/admin/stats')
+def admin_stats():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    stats = Stat.query.order_by(Stat.order.asc(), Stat.date.desc()).all()
+    return render_template('admin_stats.html', stats=stats)
+
+@app.route('/admin/stats/add', methods=['GET', 'POST'])
+def admin_stats_add():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    if request.method == 'POST':
+        stat = Stat(
+            label=request.form['label'],
+            value=request.form['value'],
+            suffix=request.form.get('suffix'),
+            order=request.form.get('order', type=int, default=0)
+        )
+        db.session.add(stat)
+        db.session.commit()
+        return redirect(url_for('admin_stats'))
+    return render_template('admin_stats_form.html')
+
+@app.route('/admin/stats/edit/<int:id>', methods=['GET', 'POST'])
+def admin_stats_edit(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    stat = Stat.query.get(id)
+    if not stat:
+        return redirect(url_for('admin_stats'))
+    if request.method == 'POST':
+        stat.label = request.form['label']
+        stat.value = request.form['value']
+        stat.suffix = request.form.get('suffix')
+        stat.order = request.form.get('order', type=int, default=0)
+        db.session.commit()
+        return redirect(url_for('admin_stats'))
+    return render_template('admin_stats_form.html', stat=stat)
+
+@app.route('/admin/stats/delete/<int:id>')
+def admin_stats_delete(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    stat = Stat.query.get(id)
+    if stat:
+        db.session.delete(stat)
+        db.session.commit()
+    return redirect(url_for('admin_stats'))
 
 # 获取供应链金融案例API
 @app.route('/api/cases')
