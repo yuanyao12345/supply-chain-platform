@@ -65,6 +65,14 @@ class Admin(db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
 
+class NavigationLink(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    url = db.Column(db.String(200), nullable=False)
+    target_blank = db.Column(db.Boolean, default=False)
+    order = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
+
 class News(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
@@ -391,6 +399,33 @@ def admin_dashboard():
     companies = Company.query.all()
     banks = Bank.query.all()
     return render_template('admin_dashboard.html', companies=companies, banks=banks)
+
+# 修改密码
+@app.route('/admin/change_password', methods=['GET', 'POST'])
+def admin_change_password():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    
+    admin = Admin.query.get(session['admin_id'])
+    if request.method == 'POST':
+        old_password = request.form['old_password']
+        new_password = request.form['new_password']
+        confirm_password = request.form['confirm_password']
+        
+        if admin.password != old_password:
+            return render_template('admin_change_password.html', error='旧密码不正确')
+        
+        if new_password != confirm_password:
+            return render_template('admin_change_password.html', error='两次输入的新密码不一致')
+        
+        if len(new_password) < 6:
+            return render_template('admin_change_password.html', error='新密码长度至少为6位')
+        
+        admin.password = new_password
+        db.session.commit()
+        return render_template('admin_change_password.html', success='密码修改成功')
+    
+    return render_template('admin_change_password.html')
 
 # 银行登录
 @app.route('/bank/login', methods=['GET', 'POST'])
@@ -1004,6 +1039,57 @@ def admin_stats_delete(id):
         db.session.delete(stat)
         db.session.commit()
     return redirect(url_for('admin_stats'))
+
+# ========== 导航栏管理 ==========
+@app.route('/admin/navigation')
+def admin_navigation():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    nav_links = NavigationLink.query.filter_by(is_active=True).order_by(NavigationLink.order.asc()).all()
+    return render_template('admin_navigation.html', nav_links=nav_links)
+
+@app.route('/admin/navigation/add', methods=['GET', 'POST'])
+def admin_navigation_add():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    if request.method == 'POST':
+        nav_link = NavigationLink(
+            name=request.form['name'],
+            url=request.form['url'],
+            target_blank=request.form.get('target_blank') == 'on',
+            order=request.form.get('order', type=int, default=0),
+            is_active=True
+        )
+        db.session.add(nav_link)
+        db.session.commit()
+        return redirect(url_for('admin_navigation'))
+    return render_template('admin_navigation_form.html')
+
+@app.route('/admin/navigation/edit/<int:id>', methods=['GET', 'POST'])
+def admin_navigation_edit(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    nav_link = NavigationLink.query.get(id)
+    if not nav_link:
+        return redirect(url_for('admin_navigation'))
+    if request.method == 'POST':
+        nav_link.name = request.form['name']
+        nav_link.url = request.form['url']
+        nav_link.target_blank = request.form.get('target_blank') == 'on'
+        nav_link.order = request.form.get('order', type=int, default=0)
+        db.session.commit()
+        return redirect(url_for('admin_navigation'))
+    return render_template('admin_navigation_form.html', nav_link=nav_link)
+
+@app.route('/admin/navigation/delete/<int:id>')
+def admin_navigation_delete(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    nav_link = NavigationLink.query.get(id)
+    if nav_link:
+        db.session.delete(nav_link)
+        db.session.commit()
+    return redirect(url_for('admin_navigation'))
 
 # 获取供应链金融案例API
 @app.route('/api/cases')

@@ -142,17 +142,17 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # 新闻数据文件路径
 NEWS_FILE = os.path.join(BASE_DIR, 'news.json')
 # 新闻数据过期时间（秒）
-NEWS_EXPIRY = 30  # 30秒
+NEWS_EXPIRY = 3600  # 1小时
 
 # 供应链金融案例数据文件路径
 CASES_FILE = os.path.join(BASE_DIR, 'cases.json')
 # 案例数据过期时间（秒）
-CASES_EXPIRY = 86400  # 1天
+CASES_EXPIRY = 3600  # 1小时
 
 # 政策资讯数据文件路径
 POLICIES_FILE = os.path.join(BASE_DIR, 'policies.json')
 # 政策资讯过期时间（秒）
-POLICIES_EXPIRY = 86400  # 1天
+POLICIES_EXPIRY = 3600  # 1小时
 
 def is_news_expired():
     """检查新闻数据是否过期"""
