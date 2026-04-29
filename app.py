@@ -622,10 +622,34 @@ def api_news_list():
 @app.route('/api/news/<int:group_id>')
 def api_get_news(group_id):
     # 使用get_news函数获取新闻数据（会从文件中读取或抓取）
-    all_news = get_news()
+    crawler_news = get_news()
     
-    # 返回所有新闻，确保至少有6条
-    return jsonify(all_news[:6])
+    # 获取数据库中的新闻
+    db_news = News.query.filter_by(group_id=group_id).order_by(News.date.desc()).limit(10).all()
+    db_news_list = []
+    for news in db_news:
+        db_news_list.append({
+            'id': news.id,
+            'title': news.title,
+            'content': news.content,
+            'link': news.link,
+            'date': news.date.strftime('%Y-%m-%d %H:%M'),
+            'source': news.source,
+            'image_prompt': news.image_prompt
+        })
+    
+    # 合并爬虫新闻和数据库新闻，数据库新闻优先
+    all_news = db_news_list + crawler_news
+    
+    # 去重：以title为基准
+    seen_titles = set()
+    unique_news = []
+    for news in all_news:
+        if news['title'] not in seen_titles:
+            seen_titles.add(news['title'])
+            unique_news.append(news)
+    
+    return jsonify(unique_news[:10])
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5002))
