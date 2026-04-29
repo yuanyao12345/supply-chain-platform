@@ -55,11 +55,37 @@ class Admin(db.Model):
 class News(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
-    content = db.Column(db.String(500), nullable=False)
-    image_prompt = db.Column(db.String(200), nullable=False)
-    link = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    image_prompt = db.Column(db.String(200))
+    link = db.Column(db.String(200))
     date = db.Column(db.DateTime, default=datetime.utcnow)
     group_id = db.Column(db.Integer, default=1)
+    source = db.Column(db.String(100))
+
+class FinanceCase(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    image_prompt = db.Column(db.String(200))
+    link = db.Column(db.String(200))
+    source = db.Column(db.String(100))
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+
+class PlatformVideo(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    video_url = db.Column(db.String(300), nullable=False)
+    thumbnail_url = db.Column(db.String(300))
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Policy(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    link = db.Column(db.String(200))
+    source = db.Column(db.String(100))
+    date = db.Column(db.DateTime, default=datetime.utcnow)
 
 # 创建数据库
 with app.app_context():
@@ -331,6 +357,228 @@ def admin_logout():
     session.pop('admin_id', None)
     return redirect(url_for('index'))
 
+# ========== 新闻管理 ==========
+# 新闻列表
+@app.route('/admin/news')
+def admin_news():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    news_list = News.query.order_by(News.date.desc()).all()
+    return render_template('admin_news.html', news_list=news_list)
+
+# 添加新闻
+@app.route('/admin/news/add', methods=['GET', 'POST'])
+def admin_news_add():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    if request.method == 'POST':
+        news = News(
+            title=request.form['title'],
+            content=request.form['content'],
+            image_prompt=request.form.get('image_prompt'),
+            link=request.form.get('link'),
+            source=request.form.get('source'),
+            group_id=request.form.get('group_id', 1)
+        )
+        db.session.add(news)
+        db.session.commit()
+        return redirect(url_for('admin_news'))
+    return render_template('admin_news_form.html')
+
+# 编辑新闻
+@app.route('/admin/news/edit/<int:id>', methods=['GET', 'POST'])
+def admin_news_edit(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    news = News.query.get(id)
+    if not news:
+        return redirect(url_for('admin_news'))
+    if request.method == 'POST':
+        news.title = request.form['title']
+        news.content = request.form['content']
+        news.image_prompt = request.form.get('image_prompt')
+        news.link = request.form.get('link')
+        news.source = request.form.get('source')
+        news.group_id = request.form.get('group_id', 1)
+        db.session.commit()
+        return redirect(url_for('admin_news'))
+    return render_template('admin_news_form.html', news=news)
+
+# 删除新闻
+@app.route('/admin/news/delete/<int:id>')
+def admin_news_delete(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    news = News.query.get(id)
+    if news:
+        db.session.delete(news)
+        db.session.commit()
+    return redirect(url_for('admin_news'))
+
+# ========== 金融案例管理 ==========
+# 案例列表
+@app.route('/admin/cases')
+def admin_cases():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    cases = FinanceCase.query.order_by(FinanceCase.date.desc()).all()
+    return render_template('admin_cases.html', cases=cases)
+
+# 添加案例
+@app.route('/admin/cases/add', methods=['GET', 'POST'])
+def admin_cases_add():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    if request.method == 'POST':
+        case = FinanceCase(
+            title=request.form['title'],
+            content=request.form['content'],
+            image_prompt=request.form.get('image_prompt'),
+            link=request.form.get('link'),
+            source=request.form.get('source')
+        )
+        db.session.add(case)
+        db.session.commit()
+        return redirect(url_for('admin_cases'))
+    return render_template('admin_cases_form.html')
+
+# 编辑案例
+@app.route('/admin/cases/edit/<int:id>', methods=['GET', 'POST'])
+def admin_cases_edit(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    case = FinanceCase.query.get(id)
+    if not case:
+        return redirect(url_for('admin_cases'))
+    if request.method == 'POST':
+        case.title = request.form['title']
+        case.content = request.form['content']
+        case.image_prompt = request.form.get('image_prompt')
+        case.link = request.form.get('link')
+        case.source = request.form.get('source')
+        db.session.commit()
+        return redirect(url_for('admin_cases'))
+    return render_template('admin_cases_form.html', case=case)
+
+# 删除案例
+@app.route('/admin/cases/delete/<int:id>')
+def admin_cases_delete(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    case = FinanceCase.query.get(id)
+    if case:
+        db.session.delete(case)
+        db.session.commit()
+    return redirect(url_for('admin_cases'))
+
+# ========== 平台视频管理 ==========
+# 视频列表
+@app.route('/admin/videos')
+def admin_videos():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    videos = PlatformVideo.query.order_by(PlatformVideo.date.desc()).all()
+    return render_template('admin_videos.html', videos=videos)
+
+# 添加视频
+@app.route('/admin/videos/add', methods=['GET', 'POST'])
+def admin_videos_add():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    if request.method == 'POST':
+        video = PlatformVideo(
+            title=request.form['title'],
+            description=request.form['description'],
+            video_url=request.form['video_url'],
+            thumbnail_url=request.form.get('thumbnail_url')
+        )
+        db.session.add(video)
+        db.session.commit()
+        return redirect(url_for('admin_videos'))
+    return render_template('admin_videos_form.html')
+
+# 编辑视频
+@app.route('/admin/videos/edit/<int:id>', methods=['GET', 'POST'])
+def admin_videos_edit(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    video = PlatformVideo.query.get(id)
+    if not video:
+        return redirect(url_for('admin_videos'))
+    if request.method == 'POST':
+        video.title = request.form['title']
+        video.description = request.form['description']
+        video.video_url = request.form['video_url']
+        video.thumbnail_url = request.form.get('thumbnail_url')
+        db.session.commit()
+        return redirect(url_for('admin_videos'))
+    return render_template('admin_videos_form.html', video=video)
+
+# 删除视频
+@app.route('/admin/videos/delete/<int:id>')
+def admin_videos_delete(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    video = PlatformVideo.query.get(id)
+    if video:
+        db.session.delete(video)
+        db.session.commit()
+    return redirect(url_for('admin_videos'))
+
+# ========== 政策资讯管理 ==========
+# 政策列表
+@app.route('/admin/policies')
+def admin_policies():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    policies = Policy.query.order_by(Policy.date.desc()).all()
+    return render_template('admin_policies.html', policies=policies)
+
+# 添加政策
+@app.route('/admin/policies/add', methods=['GET', 'POST'])
+def admin_policies_add():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    if request.method == 'POST':
+        policy = Policy(
+            title=request.form['title'],
+            content=request.form['content'],
+            link=request.form.get('link'),
+            source=request.form.get('source')
+        )
+        db.session.add(policy)
+        db.session.commit()
+        return redirect(url_for('admin_policies'))
+    return render_template('admin_policies_form.html')
+
+# 编辑政策
+@app.route('/admin/policies/edit/<int:id>', methods=['GET', 'POST'])
+def admin_policies_edit(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    policy = Policy.query.get(id)
+    if not policy:
+        return redirect(url_for('admin_policies'))
+    if request.method == 'POST':
+        policy.title = request.form['title']
+        policy.content = request.form['content']
+        policy.link = request.form.get('link')
+        policy.source = request.form.get('source')
+        db.session.commit()
+        return redirect(url_for('admin_policies'))
+    return render_template('admin_policies_form.html', policy=policy)
+
+# 删除政策
+@app.route('/admin/policies/delete/<int:id>')
+def admin_policies_delete(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    policy = Policy.query.get(id)
+    if policy:
+        db.session.delete(policy)
+        db.session.commit()
+    return redirect(url_for('admin_policies'))
+
 # 获取供应链金融案例API
 @app.route('/api/cases')
 def api_get_cases():
@@ -355,6 +603,22 @@ def api_test():
     return jsonify({'message': 'Test route works!'})
 
 # 获取新闻API
+@app.route('/api/news')
+def api_news_list():
+    news_list = News.query.order_by(News.date.desc()).limit(10).all()
+    result = []
+    for news in news_list:
+        result.append({
+            'id': news.id,
+            'title': news.title,
+            'content': news.content,
+            'link': news.link,
+            'date': news.date.strftime('%Y-%m-%d %H:%M'),
+            'source': news.source,
+            'image_prompt': news.image_prompt
+        })
+    return jsonify(result)
+
 @app.route('/api/news/<int:group_id>')
 def api_get_news(group_id):
     # 使用get_news函数获取新闻数据（会从文件中读取或抓取）

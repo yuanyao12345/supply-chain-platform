@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>案例管理 - 花湖国际机场供应链金融平台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f5f5f5; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 20px; }
+        .header-content { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 24px; font-weight: bold; }
+        .nav { display: flex; gap: 20px; }
+        .nav a { color: white; text-decoration: none; padding: 8px 16px; border-radius: 4px; transition: background 0.3s; }
+        .nav a:hover { background: rgba(255,255,255,0.1); }
+        .container { max-width: 1400px; margin: 30px auto; padding: 0 20px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .page-header h1 { color: #1e3c72; }
+        .btn { padding: 10px 20px; background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; text-decoration: none; border-radius: 6px; font-weight: bold; transition: transform 0.3s; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(42, 82, 152, 0.3); }
+        .section { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 30px; }
+        .section::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #1e3c72, #2a5298, #1e3c72); }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; color: #1e3c72; font-weight: bold; }
+        tr:hover { background: #f5f5f5; }
+        .actions { display: flex; gap: 10px; }
+        .actions a { padding: 6px 12px; font-size: 14px; border-radius: 4px; text-decoration: none; }
+        .actions .edit { background: #2a5298; color: white; }
+        .actions .delete { background: #dc3545; color: white; }
+        .empty { text-align: center; color: #999; padding: 40px; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">花湖国际机场供应链金融平台</div>
+            <nav class="nav">
+                <a href="{{ url_for('admin_dashboard') }}">仪表盘</a>
+                <a href="{{ url_for('admin_news') }}">新闻管理</a>
+                <a href="{{ url_for('admin_cases') }}" style="background: rgba(255,255,255,0.1);">案例管理</a>
+                <a href="{{ url_for('admin_videos') }}">视频管理</a>
+                <a href="{{ url_for('admin_policies') }}">政策管理</a>
+                <a href="{{ url_for('admin_logout') }}">退出登录</a>
+            </nav>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="page-header">
+            <h1>金融案例管理</h1>
+            <a href="{{ url_for('admin_cases_add') }}" class="btn">添加案例</a>
+        </div>
+        
+        <div class="section" style="position: relative;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>案例标题</th>
+                        <th>来源</th>
+                        <th>发布日期</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if cases %}
+                        {% for case in cases %}
+                        <tr>
+                            <td>{{ case.id }}</td>
+                            <td>{{ case.title[:50] }}{% if case.title|length > 50 %}...{% endif %}</td>
+                            <td>{{ case.source or '-' }}</td>
+                            <td>{{ case.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <div class="actions">
+                                    <a href="{{ url_for('admin_cases_edit', id=case.id) }}" class="edit">编辑</a>
+                                    <a href="{{ url_for('admin_cases_delete', id=case.id) }}" class="delete" onclick="return confirm('确定要删除这个案例吗？')">删除</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="empty">暂无案例数据</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

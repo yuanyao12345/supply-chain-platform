@@ -187,11 +187,12 @@
             </div>
             <nav class="nav">
                 <a href="{{ url_for('index') }}">首页</a>
-                <a href="{{ url_for('register_company') }}">企业注册</a>
-                <a href="{{ url_for('register_bank') }}">银行注册</a>
-                <a href="{{ url_for('loan_application') }}">融资申请</a>
-                <a href="{{ url_for('admin_login') }}">后台管理</a>
-                <a href="{{ url_for('bank_login') }}">融资审批</a>
+                <a href="{{ url_for('admin_dashboard') }}" style="background: rgba(255,255,255,0.1);">仪表盘</a>
+                <a href="{{ url_for('admin_news') }}">新闻管理</a>
+                <a href="{{ url_for('admin_cases') }}">案例管理</a>
+                <a href="{{ url_for('admin_videos') }}">视频管理</a>
+                <a href="{{ url_for('admin_policies') }}">政策管理</a>
+                <a href="{{ url_for('admin_logout') }}">退出登录</a>
             </nav>
         </div>
     </header>
