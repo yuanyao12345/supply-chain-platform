@@ -17,14 +17,19 @@ app.jinja_env.cache = {}
 # 文件上传配置
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB
-ALLOWED_EXTENSIONS = {'mp4', 'webm', 'ogg', 'mov', 'avi', 'wmv', 'flv'}
+ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'webm', 'ogg', 'mov', 'avi', 'wmv', 'flv'}
+ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'}
 
 # 确保上传目录存在
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# 检查文件扩展名是否允许
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+# 检查视频文件扩展名是否允许
+def allowed_video_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_VIDEO_EXTENSIONS
+
+# 检查图片文件扩展名是否允许
+def allowed_image_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
 
 db = SQLAlchemy(app)
 
@@ -164,6 +169,29 @@ class Stat(db.Model):
     suffix = db.Column(db.String(20))
     order = db.Column(db.Integer, default=0)
     date = db.Column(db.DateTime, default=datetime.utcnow)
+
+# 页面布局管理
+class PageSection(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    section_key = db.Column(db.String(50), unique=True, nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    order = db.Column(db.Integer, default=0)
+    title = db.Column(db.String(200))
+    subtitle = db.Column(db.String(500))
+    background_image = db.Column(db.String(300))
+    custom_css = db.Column(db.Text)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+
+# 上传图片管理
+class UploadedImage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(200), nullable=False)
+    original_name = db.Column(db.String(200), nullable=False)
+    file_path = db.Column(db.String(300), nullable=False)
+    file_size = db.Column(db.Integer)
+    image_type = db.Column(db.String(50))
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # 创建数据库
 with app.app_context():
@@ -1090,6 +1118,120 @@ def admin_navigation_delete(id):
         db.session.delete(nav_link)
         db.session.commit()
     return redirect(url_for('admin_navigation'))
+
+# ========== 图片上传管理 ==========
+@app.route('/admin/images')
+def admin_images():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    images = UploadedImage.query.order_by(UploadedImage.uploaded_at.desc()).all()
+    return render_template('admin_images.html', images=images)
+
+@app.route('/admin/images/upload', methods=['GET', 'POST'])
+def admin_images_upload():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    if request.method == 'POST':
+        if 'image_file' not in request.files:
+            return render_template('admin_images_upload.html', error='请选择要上传的图片')
+        
+        file = request.files['image_file']
+        if file.filename == '':
+            return render_template('admin_images_upload.html', error='请选择要上传的图片')
+        
+        if file and allowed_image_file(file.filename):
+            filename = secure_filename(file.filename)
+            # 生成唯一文件名
+            unique_filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            file.save(filepath)
+            
+            # 保存到数据库
+            uploaded_image = UploadedImage(
+                filename=unique_filename,
+                original_name=filename,
+                file_path=filepath,
+                file_size=os.path.getsize(filepath),
+                image_type=file.content_type
+            )
+            db.session.add(uploaded_image)
+            db.session.commit()
+            
+            return render_template('admin_images_upload.html', success='图片上传成功', image_url=url_for('uploaded_file', filename=unique_filename))
+    
+    return render_template('admin_images_upload.html')
+
+@app.route('/admin/images/delete/<int:id>')
+def admin_images_delete(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    image = UploadedImage.query.get(id)
+    if image:
+        # 删除文件
+        if os.path.exists(image.file_path):
+            os.remove(image.file_path)
+        # 删除数据库记录
+        db.session.delete(image)
+        db.session.commit()
+    return redirect(url_for('admin_images'))
+
+# ========== 页面布局管理 ==========
+@app.route('/admin/layout')
+def admin_layout():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    sections = PageSection.query.order_by(PageSection.order.asc()).all()
+    return render_template('admin_layout.html', sections=sections)
+
+@app.route('/admin/layout/add', methods=['GET', 'POST'])
+def admin_layout_add():
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    if request.method == 'POST':
+        section = PageSection(
+            name=request.form['name'],
+            section_key=request.form['section_key'],
+            is_active=request.form.get('is_active') == 'on',
+            order=request.form.get('order', type=int, default=0),
+            title=request.form.get('title'),
+            subtitle=request.form.get('subtitle'),
+            background_image=request.form.get('background_image'),
+            custom_css=request.form.get('custom_css')
+        )
+        db.session.add(section)
+        db.session.commit()
+        return redirect(url_for('admin_layout'))
+    return render_template('admin_layout_form.html')
+
+@app.route('/admin/layout/edit/<int:id>', methods=['GET', 'POST'])
+def admin_layout_edit(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    section = PageSection.query.get(id)
+    if not section:
+        return redirect(url_for('admin_layout'))
+    if request.method == 'POST':
+        section.name = request.form['name']
+        section.section_key = request.form['section_key']
+        section.is_active = request.form.get('is_active') == 'on'
+        section.order = request.form.get('order', type=int, default=0)
+        section.title = request.form.get('title')
+        section.subtitle = request.form.get('subtitle')
+        section.background_image = request.form.get('background_image')
+        section.custom_css = request.form.get('custom_css')
+        db.session.commit()
+        return redirect(url_for('admin_layout'))
+    return render_template('admin_layout_form.html', section=section)
+
+@app.route('/admin/layout/delete/<int:id>')
+def admin_layout_delete(id):
+    if 'admin_id' not in session:
+        return redirect(url_for('admin_login'))
+    section = PageSection.query.get(id)
+    if section:
+        db.session.delete(section)
+        db.session.commit()
+    return redirect(url_for('admin_layout'))
 
 # 获取供应链金融案例API
 @app.route('/api/cases')

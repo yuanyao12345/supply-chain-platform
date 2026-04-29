@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>导航栏管理 - 花湖国际机场供应链金融平台</title>
+    <title>布局管理 - 花湖国际机场供应链金融平台</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f5f5f5; min-height: 100vh; }
@@ -29,7 +29,9 @@
         .actions .edit { background: #2a5298; color: white; }
         .actions .delete { background: #dc3545; color: white; }
         .empty { text-align: center; color: #999; padding: 40px; }
-        .badge { display: inline-block; padding: 2px 8px; background: #28a745; color: white; border-radius: 4px; font-size: 12px; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+        .badge.active { background: #28a745; color: white; }
+        .badge.inactive { background: #dc3545; color: white; }
     </style>
 </head>
 <body>
@@ -48,9 +50,9 @@
                 <a href="{{ url_for('admin_faqs') }}">常见问题</a>
                 <a href="{{ url_for('admin_testimonials') }}">用户评价</a>
                 <a href="{{ url_for('admin_stats') }}">统计数据</a>
-                <a href="{{ url_for('admin_navigation') }}" class="active">导航栏管理</a>
+                <a href="{{ url_for('admin_navigation') }}">导航管理</a>
                 <a href="{{ url_for('admin_images') }}">图片管理</a>
-                <a href="{{ url_for('admin_layout') }}">布局管理</a>
+                <a href="{{ url_for('admin_layout') }}" class="active">布局管理</a>
                 <a href="{{ url_for('admin_change_password') }}">修改密码</a>
                 <a href="{{ url_for('admin_logout') }}">退出</a>
             </nav>
@@ -59,35 +61,37 @@
     
     <div class="container">
         <div class="page-header">
-            <h1>导航栏管理</h1>
-            <a href="{{ url_for('admin_navigation_add') }}" class="btn">添加导航链接</a>
+            <h1>页面布局管理</h1>
+            <a href="{{ url_for('admin_layout_add') }}" class="btn">添加模块</a>
         </div>
         
         <div class="section">
-            {% if nav_links %}
+            {% if sections %}
             <table>
                 <thead>
                     <tr>
                         <th>ID</th>
                         <th>名称</th>
-                        <th>链接地址</th>
-                        <th>新窗口打开</th>
+                        <th>标识</th>
+                        <th>标题</th>
                         <th>排序</th>
+                        <th>状态</th>
                         <th>操作</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for link in nav_links %}
+                    {% for section in sections %}
                     <tr>
-                        <td>{{ link.id }}</td>
-                        <td>{{ link.name }}</td>
-                        <td><a href="{{ link.url }}" target="_blank" style="color:#2a5298;">{{ link.url[:50] }}{% if link.url|length > 50 %}...{% endif %}</a></td>
-                        <td>{{ '是' if link.target_blank else '否' }}</td>
-                        <td>{{ link.order }}</td>
+                        <td>{{ section.id }}</td>
+                        <td>{{ section.name }}</td>
+                        <td>{{ section.section_key }}</td>
+                        <td>{{ section.title or '-' }}</td>
+                        <td>{{ section.order }}</td>
+                        <td><span class="badge {{ 'active' if section.is_active else 'inactive' }}">{{ '启用' if section.is_active else '禁用' }}</span></td>
                         <td>
                             <div class="actions">
-                                <a href="{{ url_for('admin_navigation_edit', id=link.id) }}" class="edit">编辑</a>
-                                <a href="{{ url_for('admin_navigation_delete', id=link.id) }}" class="delete" onclick="return confirm('确定要删除吗？')">删除</a>
+                                <a href="{{ url_for('admin_layout_edit', id=section.id) }}" class="edit">编辑</a>
+                                <a href="{{ url_for('admin_layout_delete', id=section.id) }}" class="delete" onclick="return confirm('确定要删除吗？')">删除</a>
                             </div>
                         </td>
                     </tr>
@@ -95,7 +99,7 @@
                 </tbody>
             </table>
             {% else %}
-            <div class="empty">暂无导航链接数据</div>
+            <div class="empty">暂无布局模块</div>
             {% endif %}
         </div>
     </div>

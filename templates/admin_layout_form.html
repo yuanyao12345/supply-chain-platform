@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ '编辑' if section else '添加' }}布局模块 - 花湖国际机场供应链金融平台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f5f5f5; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 20px; }
+        .header-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 24px; font-weight: bold; }
+        .nav { display: flex; gap: 20px; }
+        .nav a { color: white; text-decoration: none; padding: 8px 16px; border-radius: 4px; transition: background 0.3s; }
+        .nav a:hover { background: rgba(255,255,255,0.1); }
+        .container { max-width: 800px; margin: 50px auto; padding: 0 20px; }
+        .card { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 40px; }
+        .card h1 { color: #1e3c72; margin-bottom: 30px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
+        input[type="text"], input[type="number"], textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; }
+        input[type="text"]:focus, input[type="number"]:focus, textarea:focus { outline: none; border-color: #2a5298; }
+        textarea { min-height: 100px; }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; }
+        .btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .btn:hover { transform: translateY(-2px); }
+        .btn-secondary { background: #6c757d; margin-top: 10px; }
+        .hint { font-size: 12px; color: #999; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">花湖国际机场供应链金融平台</div>
+            <nav class="nav">
+                <a href="{{ url_for('admin_dashboard') }}">仪表盘</a>
+                <a href="{{ url_for('admin_layout') }}">布局管理</a>
+                <a href="{{ url_for('admin_logout') }}">退出登录</a>
+            </nav>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="card">
+            <h1>{{ '编辑布局模块' if section else '添加布局模块' }}</h1>
+            <form method="POST">
+                <div class="form-group">
+                    <label for="name">模块名称</label>
+                    <input type="text" id="name" name="name" value="{{ section.name if section else '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="section_key">模块标识</label>
+                    <input type="text" id="section_key" name="section_key" value="{{ section.section_key if section else '' }}" required>
+                    <div class="hint">用于程序识别的唯一标识，建议使用英文小写字母和下划线，如: hero_section, stats_section</div>
+                </div>
+                <div class="form-group">
+                    <label for="title">标题</label>
+                    <input type="text" id="title" name="title" value="{{ section.title if section else '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="subtitle">副标题</label>
+                    <textarea id="subtitle" name="subtitle">{{ section.subtitle if section else '' }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="background_image">背景图片</label>
+                    <input type="text" id="background_image" name="background_image" value="{{ section.background_image if section else '' }}">
+                    <div class="hint">可以是图片URL或上传图片后的链接</div>
+                </div>
+                <div class="form-group">
+                    <label for="custom_css">自定义CSS</label>
+                    <textarea id="custom_css" name="custom_css" style="min-height: 150px;">{{ section.custom_css if section else '' }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="order">排序号</label>
+                    <input type="number" id="order" name="order" value="{{ section.order if section else '0' }}" min="0">
+                </div>
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="is_active" name="is_active" {% if section and section.is_active %}checked{% elif not section %}checked{% endif %}>
+                        <label for="is_active">启用该模块</label>
+                    </div>
+                </div>
+                <button type="submit" class="btn">{{ '保存修改' if section else '添加模块' }}</button>
+                <a href="{{ url_for('admin_layout') }}" class="btn btn-secondary" style="text-align:center;text-decoration:none;display:block;">返回列表</a>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
