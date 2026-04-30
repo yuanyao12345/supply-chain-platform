@@ -984,7 +984,7 @@
         </style>
         <div class="bottom-section">
             <div class="case-section">
-                <h2>供应链金融案例 <span style="font-size: 12px; color: #999; font-weight: normal;" id="cases-timer">（下次更新: 1天后）</span></h2>
+                <h2>供应链金融案例 <span style="font-size: 12px; color: #999; font-weight: normal;" id="cases-timer">（下次更新: 60分钟后）</span></h2>
                 <div id="cases-list">
                 </div>
             </div>
@@ -1253,7 +1253,7 @@
 
         <!-- 政策资讯区 -->
         <div class="policy-section">
-            <h2>政策资讯 <span style="font-size: 12px; color: #999; font-weight: normal;" id="policies-timer">（下次更新: 1天后）</span></h2>
+            <h2>政策资讯 <span style="font-size: 12px; color: #999; font-weight: normal;" id="policies-timer">（下次更新: 60分钟后）</span></h2>
             <div id="policies-list">
             </div>
         </div>
@@ -1392,7 +1392,7 @@
             document.getElementById('calculatorResult').style.display = 'block';
         }
 
-        let countdownSeconds = 30; // 30秒
+        let countdownSeconds = 3600; // 1小时
         let countdownInterval;
         let pollInterval;
 
@@ -1471,24 +1471,39 @@
                countdownSeconds--;
                if (countdownSeconds <= 0) {
                    loadNews();
-                   countdownSeconds = 30; // 重置为30秒
+                   countdownSeconds = 3600; // 重置为1小时
                }
-               document.getElementById('update-timer').textContent = `（下次更新: ${countdownSeconds}秒后）`;
+               // 格式化显示时间
+               let hours = Math.floor(countdownSeconds / 3600);
+               let minutes = Math.floor((countdownSeconds % 3600) / 60);
+               let seconds = countdownSeconds % 60;
+               let displayText;
+               if (hours > 0) {
+                   displayText = `（下次更新: ${hours}小时${minutes}分钟后）`;
+               } else if (minutes > 0) {
+                   displayText = `（下次更新: ${minutes}分钟${seconds}秒后）`;
+               } else {
+                   displayText = `（下次更新: ${seconds}秒后）`;
+               }
+               document.getElementById('update-timer').textContent = displayText;
            }
 
            function startPolling() {
-               // 每30秒轮询一次新闻
+               // 每1小时轮询一次新闻
                pollInterval = setInterval(() => {
                    loadNews();
-                   console.log('轮询获取最新新闻...');
-               }, 30000);
+                   loadCases();
+                   loadPolicies();
+                   console.log('轮询获取最新数据...');
+               }, 3600000); // 1小时 = 3600000毫秒
            }
 
         document.addEventListener('DOMContentLoaded', function() {
             console.log('页面加载完成，初始化数据...');
             // 加载新闻
             loadNews();
-            document.getElementById('update-timer').textContent = `（下次更新: ${countdownSeconds}秒后）`;
+            // 初始化显示1小时倒计时
+            document.getElementById('update-timer').textContent = '（下次更新: 1小时0分钟后）';
             countdownInterval = setInterval(updateCountdown, 1000);
             startPolling();
             
