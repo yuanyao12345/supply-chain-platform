@@ -326,13 +326,20 @@ def init_db():
         _db_initialized = True  # 避免反复尝试
 
 # 在模块加载时尝试初始化（在普通环境下生效）
-init_db()
+try:
+    init_db()
+except Exception as e:
+    print(f"模块加载时初始化数据库失败: {e}")
 
 # 使用 before_request 钩子确保在 Serverless 环境中也能初始化
 @app.before_request
 def ensure_db():
+    global _db_initialized
     if not _db_initialized:
-        init_db()
+        try:
+            init_db()
+        except Exception as e:
+            print(f"请求时初始化数据库失败: {e}")
 
 # 首页
 @app.route('/')

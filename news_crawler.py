@@ -752,6 +752,19 @@ def crawl_news():
 
 def get_news():
     """获取最新新闻数据"""
+    # 在 Serverless 环境（Vercel 等）下不进行实时爬取，避免超时
+    if os.environ.get('VERCEL_ENV') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'):
+        # 优先从缓存文件读取
+        try:
+            if not is_news_expired():
+                with open(NEWS_FILE, 'r', encoding='utf-8') as f:
+                    news_data = json.load(f)
+                return news_data['news']
+        except Exception as e:
+            print(f'Serverless 环境读取新闻缓存失败: {e}')
+        # 缓存不可用时返回空列表，由 app.py 用数据库内容填充
+        return []
+    
     # 检查新闻数据是否过期
     if is_news_expired():
         return crawl_news()
@@ -897,6 +910,17 @@ def crawl_cases():
 
 def get_cases():
     """获取最新供应链金融案例数据"""
+    # 在 Serverless 环境（Vercel 等）下不进行实时爬取，避免超时
+    if os.environ.get('VERCEL_ENV') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'):
+        try:
+            if not is_cases_expired():
+                with open(CASES_FILE, 'r', encoding='utf-8') as f:
+                    cases_data = json.load(f)
+                return cases_data['cases']
+        except Exception as e:
+            print(f'Serverless 环境读取案例缓存失败: {e}')
+        return []
+    
     # 检查案例数据是否过期
     if is_cases_expired():
         return crawl_cases()
@@ -1042,6 +1066,17 @@ def crawl_policies():
 
 def get_policies():
     """获取最新政策资讯数据"""
+    # 在 Serverless 环境（Vercel 等）下不进行实时爬取，避免超时
+    if os.environ.get('VERCEL_ENV') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'):
+        try:
+            if not is_policies_expired():
+                with open(POLICIES_FILE, 'r', encoding='utf-8') as f:
+                    policies_data = json.load(f)
+                return policies_data['policies']
+        except Exception as e:
+            print(f'Serverless 环境读取政策缓存失败: {e}')
+        return []
+    
     # 检查政策数据是否过期
     if is_policies_expired():
         return crawl_policies()
