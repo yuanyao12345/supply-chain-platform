@@ -139,18 +139,29 @@ KEYWORDS = ['供应链', '金融', '物流', '航空', '货运', '融资', '供�
 # 获取当前脚本所在目录
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# 在 Serverless 环境（Vercel 等）下使用 /tmp 目录作为可写目录
+def _get_writable_dir():
+    """返回可写的目录，优先使用 /tmp（Serverless 环境）"""
+    # 检测是否在 Vercel 等 Serverless 环境
+    if os.environ.get('VERCEL_ENV') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'):
+        return '/tmp'
+    # 普通环境使用脚本所在目录
+    return BASE_DIR
+
+WRITABLE_DIR = _get_writable_dir()
+
 # 新闻数据文件路径
-NEWS_FILE = os.path.join(BASE_DIR, 'news.json')
+NEWS_FILE = os.path.join(WRITABLE_DIR, 'news.json')
 # 新闻数据过期时间（秒）
 NEWS_EXPIRY = 3600  # 1小时
 
 # 供应链金融案例数据文件路径
-CASES_FILE = os.path.join(BASE_DIR, 'cases.json')
+CASES_FILE = os.path.join(WRITABLE_DIR, 'cases.json')
 # 案例数据过期时间（秒）
 CASES_EXPIRY = 3600  # 1小时
 
 # 政策资讯数据文件路径
-POLICIES_FILE = os.path.join(BASE_DIR, 'policies.json')
+POLICIES_FILE = os.path.join(WRITABLE_DIR, 'policies.json')
 # 政策资讯过期时间（秒）
 POLICIES_EXPIRY = 3600  # 1小时
 

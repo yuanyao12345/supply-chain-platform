@@ -3,25 +3,48 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
 import json
+import tempfile
 from werkzeug.utils import secure_filename
 from news_crawler import get_news, get_cases, get_policies
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'supersecretkey')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///supply_chain.db')
+
+# 检测是否在 Serverless 环境（Vercel/AWS Lambda 等）
+IS_SERVERLESS = os.environ.get('VERCEL_ENV') is not None or os.environ.get('AWS_LAMBDA_FUNCTION_NAME') is not None
+
+# 数据库配置：Serverless 环境使用 /tmp 下的 SQLite，否则用默认
+if IS_SERVERLESS:
+    # Vercel Serverless 函数中，只有 /tmp 是可写的
+    db_path = '/tmp/supply_chain.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', f'sqlite:///{db_path}')
+    # 上传目录也使用 /tmp
+    upload_dir = '/tmp/uploads'
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///supply_chain.db')
+    upload_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.jinja_env.auto_reload = True
 app.jinja_env.cache = {}
 
 # 文件上传配置
-app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
-app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB
+app.config['UPLOAD_FOLDER'] = upload_dir
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB（Vercel 限制）
 ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'webm', 'ogg', 'mov', 'avi', 'wmv', 'flv'}
 ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'}
 
-# 确保上传目录存在
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+# 确保上传目录存在（仅在可写环境中）
+try:
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+except (OSError, PermissionError):
+    # 在只读文件系统中忽略错误，使用 /tmp 作为后备
+    app.config['UPLOAD_FOLDER'] = '/tmp/uploads'
+    try:
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    except Exception:
+        pass
 
 # 检查视频文件扩展名是否允许
 def allowed_video_file(filename):
@@ -193,104 +216,123 @@ class UploadedImage(db.Model):
     image_type = db.Column(db.String(50))
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-# 创建数据库
-with app.app_context():
-    db.create_all()
-    # 创建默认管理员账户
-    if not Admin.query.filter_by(username='admin').first():
-        admin = Admin(username='admin', password='admin123')
-        db.session.add(admin)
-        db.session.commit()
-    
-    # 初始化新闻数据
-    if not News.query.first():
-        news_data = [
-            # 第一组新闻
-            News(title='供应链金融创新模式助力航空物流发展', 
-                 content='通过金融科技手段，为航空物流企业提供更加灵活的融资解决方案。',
-                 image_prompt='supply%20chain%20finance%20news%20professional',
-                 link='https://finance.sina.com.cn/stock/relate/2026-03-20/detail-ihcrzpzf1234567.shtml',
-                 date=datetime(2026, 3, 20),
-                 group_id=1),
-            News(title='多家银行加入机场供应链金融生态',
-                 content='包括工商银行、建设银行等多家银行已正式接入平台，为企业提供多元化融资渠道。',
-                 image_prompt='bank%20partnership%20finance%20news',
-                 link='https://finance.baidu.com/topic/20260315/bank-supply-chain',
-                 date=datetime(2026, 3, 15),
-                 group_id=1),
-            News(title='花湖国际机场供应链金融平台正式上线',
-                 content='平台将为机场供应链企业提供更加便捷的融资服务，支持企业发展。',
-                 image_prompt='platform%20launch%20supply%20chain%20finance',
-                 link='https://finance.qq.com/a/20260310/001234.htm',
-                 date=datetime(2026, 3, 10),
-                 group_id=1),
+# 创建数据库（带错误处理，防止 Serverless 环境崩溃）
+_db_initialized = False
+def init_db():
+    global _db_initialized
+    if _db_initialized:
+        return
+    try:
+        with app.app_context():
+            db.create_all()
+            # 创建默认管理员账户
+            if not Admin.query.filter_by(username='admin').first():
+                admin = Admin(username='admin', password='admin123')
+                db.session.add(admin)
+                db.session.commit()
             
-            # 第二组新闻
-            News(title='航空燃油供应商数字化融资解决方案',
-                 content='采用区块链技术实现供应链金融的透明化管理，降低融资风险。',
-                 image_prompt='aviation%20fuel%20supply%20chain%20digital%20finance',
-                 link='https://finance.sina.com.cn/stock/relate/2026-03-25/detail-ihcrzpzf7654321.shtml',
-                 date=datetime(2026, 3, 25),
-                 group_id=2),
-            News(title='智能风控系统提升融资审批效率',
-                 content='引入人工智能风控系统，将融资审批时间从传统的15天缩短至3天。',
-                 image_prompt='ai%20risk%20control%20supply%20chain%20finance',
-                 link='https://finance.baidu.com/topic/20260322/ai-risk-control',
-                 date=datetime(2026, 3, 22),
-                 group_id=2),
-            News(title='跨境电商供应链金融服务创新',
-                 content='为跨境电商企业提供一站式融资解决方案，支持企业国际化发展。',
-                 image_prompt='cross%20border%20ecommerce%20supply%20chain%20finance',
-                 link='https://finance.qq.com/a/20260318/005678.htm',
-                 date=datetime(2026, 3, 18),
-                 group_id=2),
-            
-            # 第三组新闻
-            News(title='绿色供应链金融助力可持续发展',
-                 content='推出绿色金融产品，支持环保型供应链企业的融资需求。',
-                 image_prompt='green%20supply%20chain%20finance%20sustainable',
-                 link='https://finance.sina.com.cn/stock/relate/2026-03-28/detail-ihcrzpzf9876543.shtml',
-                 date=datetime(2026, 3, 28),
-                 group_id=3),
-            News(title='供应链金融数据共享平台建设',
-                 content='建立企业信用数据共享机制，提高融资效率和安全性。',
-                 image_prompt='data%20sharing%20platform%20supply%20chain%20finance',
-                 link='https://finance.baidu.com/topic/20260326/data-sharing',
-                 date=datetime(2026, 3, 26),
-                 group_id=3),
-            News(title='供应链资产证券化产品创新',
-                 content='推出供应链资产证券化产品，为投资者提供多元化投资渠道。',
-                 image_prompt='asset%20securitization%20supply%20chain%20finance',
-                 link='https://finance.qq.com/a/20260324/009012.htm',
-                 date=datetime(2026, 3, 24),
-                 group_id=3),
-        ]
-        
-        for news in news_data:
-            db.session.add(news)
-        db.session.commit()
-    else:
-        # 更新现有新闻链接
-        news_list = News.query.all()
-        if len(news_list) > 0:
-            updated_links = [
-                # 第一组
-                'https://finance.sina.com.cn/stock/relate/2026-03-20/detail-ihcrzpzf1234567.shtml',
-                'https://finance.baidu.com/topic/20260315/bank-supply-chain',
-                'https://finance.qq.com/a/20260310/001234.htm',
-                # 第二组
-                'https://finance.sina.com.cn/stock/relate/2026-03-25/detail-ihcrzpzf7654321.shtml',
-                'https://finance.baidu.com/topic/20260322/ai-risk-control',
-                'https://finance.qq.com/a/20260318/005678.htm',
-                # 第三组
-                'https://finance.sina.com.cn/stock/relate/2026-03-28/detail-ihcrzpzf9876543.shtml',
-                'https://finance.baidu.com/topic/20260326/data-sharing',
-                'https://finance.qq.com/a/20260324/009012.htm',
-            ]
-            for i, news in enumerate(news_list):
-                if i < len(updated_links):
-                    news.link = updated_links[i]
-            db.session.commit()
+            # 初始化新闻数据
+            if not News.query.first():
+                news_data = [
+                    # 第一组新闻
+                    News(title='供应链金融创新模式助力航空物流发展', 
+                         content='通过金融科技手段，为航空物流企业提供更加灵活的融资解决方案。',
+                         image_prompt='supply%20chain%20finance%20news%20professional',
+                         link='https://finance.sina.com.cn/stock/relate/2026-03-20/detail-ihcrzpzf1234567.shtml',
+                         date=datetime(2026, 3, 20),
+                         group_id=1),
+                    News(title='多家银行加入机场供应链金融生态',
+                         content='包括工商银行、建设银行等多家银行已正式接入平台，为企业提供多元化融资渠道。',
+                         image_prompt='bank%20partnership%20finance%20news',
+                         link='https://finance.baidu.com/topic/20260315/bank-supply-chain',
+                         date=datetime(2026, 3, 15),
+                         group_id=1),
+                    News(title='花湖国际机场供应链金融平台正式上线',
+                         content='平台将为机场供应链企业提供更加便捷的融资服务，支持企业发展。',
+                         image_prompt='platform%20launch%20supply%20chain%20finance',
+                         link='https://finance.qq.com/a/20260310/001234.htm',
+                         date=datetime(2026, 3, 10),
+                         group_id=1),
+                    
+                    # 第二组新闻
+                    News(title='航空燃油供应商数字化融资解决方案',
+                         content='采用区块链技术实现供应链金融的透明化管理，降低融资风险。',
+                         image_prompt='aviation%20fuel%20supply%20chain%20digital%20finance',
+                         link='https://finance.sina.com.cn/stock/relate/2026-03-25/detail-ihcrzpzf7654321.shtml',
+                         date=datetime(2026, 3, 25),
+                         group_id=2),
+                    News(title='智能风控系统提升融资审批效率',
+                         content='引入人工智能风控系统，将融资审批时间从传统的15天缩短至3天。',
+                         image_prompt='ai%20risk%20control%20supply%20chain%20finance',
+                         link='https://finance.baidu.com/topic/20260322/ai-risk-control',
+                         date=datetime(2026, 3, 22),
+                         group_id=2),
+                    News(title='跨境电商供应链金融服务创新',
+                         content='为跨境电商企业提供一站式融资解决方案，支持企业国际化发展。',
+                         image_prompt='cross%20border%20ecommerce%20supply%20chain%20finance',
+                         link='https://finance.qq.com/a/20260318/005678.htm',
+                         date=datetime(2026, 3, 18),
+                         group_id=2),
+                    
+                    # 第三组新闻
+                    News(title='绿色供应链金融助力可持续发展',
+                         content='推出绿色金融产品，支持环保型供应链企业的融资需求。',
+                         image_prompt='green%20supply%20chain%20finance%20sustainable',
+                         link='https://finance.sina.com.cn/stock/relate/2026-03-28/detail-ihcrzpzf9876543.shtml',
+                         date=datetime(2026, 3, 28),
+                         group_id=3),
+                    News(title='供应链金融数据共享平台建设',
+                         content='建立企业信用数据共享机制，提高融资效率和安全性。',
+                         image_prompt='data%20sharing%20platform%20supply%20chain%20finance',
+                         link='https://finance.baidu.com/topic/20260326/data-sharing',
+                         date=datetime(2026, 3, 26),
+                         group_id=3),
+                    News(title='供应链资产证券化产品创新',
+                         content='推出供应链资产证券化产品，为投资者提供多元化投资渠道。',
+                         image_prompt='asset%20securitization%20supply%20chain%20finance',
+                         link='https://finance.qq.com/a/20260324/009012.htm',
+                         date=datetime(2026, 3, 24),
+                         group_id=3),
+                ]
+                
+                for news in news_data:
+                    db.session.add(news)
+                db.session.commit()
+            else:
+                # 更新现有新闻链接
+                news_list = News.query.all()
+                if len(news_list) > 0:
+                    updated_links = [
+                        # 第一组
+                        'https://finance.sina.com.cn/stock/relate/2026-03-20/detail-ihcrzpzf1234567.shtml',
+                        'https://finance.baidu.com/topic/20260315/bank-supply-chain',
+                        'https://finance.qq.com/a/20260310/001234.htm',
+                        # 第二组
+                        'https://finance.sina.com.cn/stock/relate/2026-03-25/detail-ihcrzpzf7654321.shtml',
+                        'https://finance.baidu.com/topic/20260322/ai-risk-control',
+                        'https://finance.qq.com/a/20260318/005678.htm',
+                        # 第三组
+                        'https://finance.sina.com.cn/stock/relate/2026-03-28/detail-ihcrzpzf9876543.shtml',
+                        'https://finance.baidu.com/topic/20260326/data-sharing',
+                        'https://finance.qq.com/a/20260324/009012.htm',
+                    ]
+                    for i, news in enumerate(news_list):
+                        if i < len(updated_links):
+                            news.link = updated_links[i]
+                    db.session.commit()
+            _db_initialized = True
+    except Exception as e:
+        print(f"数据库初始化失败（非致命）: {e}")
+        _db_initialized = True  # 避免反复尝试
+
+# 在模块加载时尝试初始化（在普通环境下生效）
+init_db()
+
+# 使用 before_request 钩子确保在 Serverless 环境中也能初始化
+@app.before_request
+def ensure_db():
+    if not _db_initialized:
+        init_db()
 
 # 首页
 @app.route('/')
@@ -1237,7 +1279,12 @@ def admin_layout_delete(id):
 @app.route('/api/cases')
 def api_get_cases():
     # 使用get_cases函数获取案例数据（会从文件中读取或抓取）
-    crawler_cases = get_cases()
+    # 加入错误处理，防止爬虫超时导致 500 错误
+    try:
+        crawler_cases = get_cases()
+    except Exception as e:
+        print(f'爬取案例失败: {e}')
+        crawler_cases = []
     
     # 获取数据库中的案例
     db_cases = FinanceCase.query.order_by(FinanceCase.date.desc()).limit(10).all()
@@ -1270,7 +1317,12 @@ def api_get_cases():
 @app.route('/api/policies')
 def api_get_policies():
     # 使用get_policies函数获取政策数据（会从文件中读取或抓取）
-    crawler_policies = get_policies()
+    # 加入错误处理，防止爬虫超时导致 500 错误
+    try:
+        crawler_policies = get_policies()
+    except Exception as e:
+        print(f'爬取政策失败: {e}')
+        crawler_policies = []
     
     # 获取数据库中的政策
     db_policies = Policy.query.order_by(Policy.date.desc()).limit(10).all()
@@ -1351,7 +1403,12 @@ def api_news_list():
 @app.route('/api/news/<int:group_id>')
 def api_get_news(group_id):
     # 使用get_news函数获取新闻数据（会从文件中读取或抓取）
-    crawler_news = get_news()
+    # 加入错误处理，防止爬虫超时导致 500 错误
+    try:
+        crawler_news = get_news()
+    except Exception as e:
+        print(f'爬取新闻失败: {e}')
+        crawler_news = []
     
     # 获取数据库中的新闻
     db_news = News.query.filter_by(group_id=group_id).order_by(News.date.desc()).limit(10).all()
